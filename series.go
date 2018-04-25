@@ -2,15 +2,20 @@ package emseries
 
 import (
 	"errors"
+	"os"
 	"time"
 )
 
 type Record interface {
-	timestamp() time.Time
-	tags() []string
+	Timestamp() time.Time
+	Tags() []string
+	Values() []string
 }
 
 type Series struct {
+	root    string
+	current *string
+	fh      *os.File
 }
 
 /*
@@ -19,14 +24,18 @@ search
 delete
 */
 
-func (self *Series) put(r *Record) error {
-	return errors.New("[Series.put] not implemented")
+func NewSeries(path string) (*Series, error) {
+	return nil, errors.New("[Series.NewSeries] not implemented")
 }
 
-func (self *Series) search(criteria *Criteria) ([]Record, error) {
-	return []Record{}, errors.New("[Series.search] not implemented")
+func (self *Series) Put(r Record) error {
+	return errors.New("[Series.Put] not implemented")
 }
 
-func (self *Series) remove(criteria *Criteria) ([]Record, error) {
-	return []Record{}, errors.New("[Series.remove] not implemented")
+func (self *Series) Search(criteria Criteria) ([]Record, error) {
+	return []Record{}, errors.New("[Series.Search] not implemented")
+}
+
+func (self *Series) Remove(criteria *Criteria) ([]Record, error) {
+	return []Record{}, errors.New("[Series.Remove] not implemented")
 }
