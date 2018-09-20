@@ -14,7 +14,7 @@ mod criteria;
 mod series;
 mod types;
 
-pub use types::{ Error, Record };
+pub use types::{ Error, Record, Recordable };
 pub use series::{ Series };
 pub use criteria::{ Criteria, exact_time };
 

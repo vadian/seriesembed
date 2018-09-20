@@ -1,10 +1,10 @@
 extern crate chrono;
 
 use self::chrono::{ DateTime, Utc };
-use types::Record;
+use types::Recordable;
 
 pub trait Criteria {
-    fn apply<T: Record>(&self, record: &T) -> bool;
+    fn apply<T: Recordable>(&self, record: &T) -> bool;
 }
 
 
@@ -18,7 +18,7 @@ impl <A, B> Criteria for And<A, B>
     where A: Criteria,
           B: Criteria
 {
-    fn apply<T: Record>(&self, record: &T) -> bool {
+    fn apply<T: Recordable>(&self, record: &T) -> bool {
         self.lside.apply(record) && self.rside.apply(record)
     }
 }
@@ -37,7 +37,7 @@ pub struct StartTime {
 
 
 impl Criteria for StartTime {
-    fn apply<T: Record>(&self, record: &T) -> bool {
+    fn apply<T: Recordable>(&self, record: &T) -> bool {
         if self.incl {
             record.timestamp() >= self.time
         } else {
@@ -54,7 +54,7 @@ pub struct EndTime {
 
 
 impl Criteria for EndTime {
-    fn apply<T: Record>(&self, record: &T) -> bool {
+    fn apply<T: Recordable>(&self, record: &T) -> bool {
         if self.incl {
             record.timestamp() <= self.time
         } else {

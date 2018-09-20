@@ -13,14 +13,41 @@ pub enum Error {
 }
 
 
-pub trait Record
+pub trait Recordable
 {
-    fn id(&self) -> Option<Uuid>;
-    fn set_id(&mut self, Uuid);
     fn timestamp(&self) -> DateTime<Utc>;
     fn tags(&self) -> Vec<String>;
     fn values(&self) -> Vec<String>;
 }
 
+
+#[derive(Clone)]
+pub struct Record<T: Clone + Recordable> {
+    pub id: Uuid,
+    pub data: T,
+}
+
+impl <T> Record<T>
+    where T: Clone + Recordable
+{
+    pub fn new(data: T) -> Record<T> {
+        let id = Uuid::new_v4();
+        Record{id, data}
+    }
+}
+
+impl <T> Recordable for Record<T>
+    where T: Clone + Recordable
+{
+    fn timestamp(&self) -> DateTime<Utc> {
+        self.data.timestamp()
+    }
+    fn tags(&self) -> Vec<String> {
+        self.data.tags()
+    }
+    fn values(&self) -> Vec<String> {
+        self.data.values()
+    }
+}
 
 

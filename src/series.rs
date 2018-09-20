@@ -5,19 +5,19 @@ use std::io::{ BufWriter };
 use self::uuid::{ Uuid };
 
 use criteria::{ Criteria };
-use types::{ Error, Record };
+use types::{ Error, Record, Recordable };
 
-pub struct Series<T> {
+pub struct Series<T: Clone + Recordable> {
     path: String,
     writer: BufWriter<File>,
-    records: Vec<T>,
+    records: Vec<Record<T>>,
 }
 
 
 impl <T> Series<T> 
-    where T: Record
+    where T: Clone + Recordable
 {
-    pub fn new(path: &str) -> Result<Series<T>, Error> {
+    pub fn open(path: &str) -> Result<Series<T>, Error> {
         let mut fullpath = String::from(path);
         fullpath.push_str(".json");
         let f = File::create(&fullpath).map_err(Error::IOError)?;
@@ -30,17 +30,21 @@ impl <T> Series<T>
         })
     }
 
-    pub fn put(& mut self, entry: T) -> Result<Uuid, Error> {
-        unimplemented!()
+    pub fn put(&mut self, entry: T) -> Result<Uuid, Error> {
+        let rec = Record::new(entry);
+        self.records.push(rec.clone());
+        Ok(rec.id)
     }
 
-    pub fn search<C>(&self, criteria: C) -> Result<Vec<T>, Error>
+    pub fn search<C>(&self, criteria: C) -> Result<Vec<Record<T>>, Error>
         where C: Criteria {
         unimplemented!()
     }
 
-    pub fn get(&self, uuid: Uuid) -> Result<Option<T>, Error> {
-        unimplemented!()
+    pub fn get(&self, uuid: Uuid) -> Result<Option<Record<T>>, Error> {
+        let mut matches: Vec<&Record<T>> = self.records.iter().filter(|r| r.id == uuid).collect();
+        let val: Option<&Record<T>> = matches.pop();
+        Ok(val.cloned())
     }
     
     pub fn remove(&self, uuid: Uuid) -> Result<(), Error> {
