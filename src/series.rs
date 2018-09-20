@@ -38,7 +38,13 @@ impl <T> Series<T>
 
     pub fn search<C>(&self, criteria: C) -> Result<Vec<Record<T>>, Error>
         where C: Criteria {
-        unimplemented!()
+        let results: Vec<Record<T>> =
+            self.records
+                .iter()
+                .filter(|&tr| criteria.apply(tr))
+                .map(|tr| tr.clone())
+                .collect();
+        Ok(results)
     }
 
     pub fn get(&self, uuid: Uuid) -> Result<Option<Record<T>>, Error> {

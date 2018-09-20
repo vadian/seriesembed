@@ -21,7 +21,7 @@ pub trait Recordable
 }
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Record<T: Clone + Recordable> {
     pub id: Uuid,
     pub data: T,
@@ -50,4 +50,19 @@ impl <T> Recordable for Record<T>
     }
 }
 
+/*
+impl <T> Recordable for & 'a Record<T>
+    where T: Clone + Recordable
+{
+    fn timestamp(&self) -> DateTime<Utc> {
+        self.data.timestamp()
+    }
+    fn tags(&self) -> DateTime<Utc> {
+        self.data.tags()
+    }
+    fn values(&self) -> DateTime<Utc> {
+        self.data.values()
+    }
+}
+*/
 

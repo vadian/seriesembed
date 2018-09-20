@@ -5,7 +5,7 @@ extern crate uuid;
 
 use chrono::prelude::*;
 use dimensioned::si::{ M, Meter, S, Second };
-use uuid::Uuid;
+//use uuid::Uuid;
 
 use emseries::*;
 
@@ -89,7 +89,22 @@ pub fn can_add_and_retrieve_an_entry() {
 
 #[test]
 pub fn can_search_for_an_entry_with_exact_time() {
-    unimplemented!()
+    let trips = mk_trips();
+    let mut ts: Series<BikeTrip> = emseries::Series::open("var/series1").expect("expect the time series to open correctly");
+    ts.put(trips[0].clone());
+    ts.put(trips[1].clone());
+    ts.put(trips[2].clone());
+    ts.put(trips[3].clone());
+    ts.put(trips[4].clone());
+
+    match ts.search(exact_time(Utc.ymd(2011, 10, 31).and_hms(0, 0, 0))) {
+        Err(err) => assert!(false, err),
+        Ok(v) => {
+            assert_eq!(v.len(), 1);
+            let tr = &v[0];
+            assert_eq!(tr.data, trips[1]);
+        }
+    }
 }
 
 
