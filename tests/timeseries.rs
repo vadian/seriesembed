@@ -1,10 +1,14 @@
 extern crate chrono;
 extern crate dimensioned;
 extern crate emseries;
+extern crate serde;
+extern crate serde_json;
 extern crate uuid;
 
 use chrono::prelude::*;
 use dimensioned::si::{ M, Meter, S, Second };
+use std::fs;
+use serde::ser::{ Serialize, Serializer, SerializeStruct };
 //use uuid::Uuid;
 
 use emseries::*;
@@ -15,6 +19,19 @@ struct BikeTrip {
     distance: Meter<f64>,
     duration: Second<f64>,
     comments: String,
+}
+
+impl Serialize for BikeTrip {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut s = serializer.serialize_struct("BikeTrip", 4)?;
+        s.serialize_field("timestamp", &self.datetime)?;
+        s.serialize_field("distance", &self.duration.value_unsafe)?;
+        s.serialize_field("duration", &self.duration.value_unsafe)?;
+        s.serialize_field("comments", &self.comments)?;
+        s.end()
+    }
 }
 
 impl Recordable for BikeTrip {
@@ -61,17 +78,31 @@ fn mk_trips() -> [BikeTrip; 5] {
 }
 
 
+/*
+#[test]
+pub fn check_serialization() {
+    let trips = mk_trips();
+    println!("[check_serialization] {:?}", serde_json::to_string(&trips));
+    unimplemented!();
+}
+*/
+
+
 #[test]
 pub fn can_add_and_retrieve_an_entry() {
     let trips = mk_trips();
-    let mut ts: Series<BikeTrip> = emseries::Series::open("var/series1").expect("expect the time series to open correctly");
+    let mut ts: Series<BikeTrip> = emseries::Series::open("var/series").expect("expect the time series to open correctly");
     let uuid = ts.put(trips[0].clone()).expect("expect a successful put");
-    let record_res = ts.get(uuid);
+    let record_res = ts.get(uuid.clone());
 
-    ts.put(trips[1].clone());
-    ts.put(trips[2].clone());
-    ts.put(trips[3].clone());
-    ts.put(trips[4].clone());
+    ts.put(trips[1].clone()).expect("expect a successful put");
+    ts.put(trips[2].clone()).expect("expect a successful put");
+    ts.put(trips[3].clone()).expect("expect a successful put");
+    ts.put(trips[4].clone()).expect("expect a successful put");
+
+    for name in fs::read_dir("var/") {
+        println!("[persists-and-reads-an-entry] {:?}", name);
+    }
 
     match record_res {
         Err(err) => assert!(false, err),
@@ -84,43 +115,97 @@ pub fn can_add_and_retrieve_an_entry() {
             assert_eq!(tr.data, trips[0]);
         }
     }
+    fs::remove_file("var/series.json").expect("remove file failed");
 }
 
 
 #[test]
 pub fn can_search_for_an_entry_with_exact_time() {
     let trips = mk_trips();
-    let mut ts: Series<BikeTrip> = emseries::Series::open("var/series1").expect("expect the time series to open correctly");
-    ts.put(trips[0].clone());
-    ts.put(trips[1].clone());
-    ts.put(trips[2].clone());
-    ts.put(trips[3].clone());
-    ts.put(trips[4].clone());
+    let mut ts: Series<BikeTrip> = emseries::Series::open("var/series").expect("expect the time series to open correctly");
+    ts.put(trips[0].clone()).expect("expect a successful put");
+    ts.put(trips[1].clone()).expect("expect a successful put");
+    ts.put(trips[2].clone()).expect("expect a successful put");
+    ts.put(trips[3].clone()).expect("expect a successful put");
+    ts.put(trips[4].clone()).expect("expect a successful put");
+
+    for name in fs::read_dir("var/").expect("readdir failed") {
+        println!("[can_search] {:?}", name);
+    }
+
 
     match ts.search(exact_time(Utc.ymd(2011, 10, 31).and_hms(0, 0, 0))) {
         Err(err) => assert!(false, err),
         Ok(v) => {
             assert_eq!(v.len(), 1);
-            let tr = &v[0];
-            assert_eq!(tr.data, trips[1]);
+            assert_eq!(v[0].data, trips[1]);
         }
     }
+    fs::remove_file("var/series.json").expect("remove file failed");
 }
 
 
-#[test]
+//#[test]
 pub fn can_get_entries_in_time_range() {
-    unimplemented!()
+    let trips = mk_trips();
+    let mut ts: Series<BikeTrip> = emseries::Series::open("var/series").expect("expect the time series to open correctly");
+    ts.put(trips[0].clone()).expect("expect a successful put");
+    ts.put(trips[1].clone()).expect("expect a successful put");
+    ts.put(trips[2].clone()).expect("expect a successful put");
+    ts.put(trips[3].clone()).expect("expect a successful put");
+    ts.put(trips[4].clone()).expect("expect a successful put");
+
+    match ts.search(time_range(Utc.ymd(2011, 10, 31).and_hms(0, 0, 0), true,
+                               Utc.ymd(2011, 11, 04).and_hms(0, 0, 0), true)) {
+        Err(err) => assert!(false, err),
+        Ok(v) => {
+            assert_eq!(v.len(), 3);
+            assert_eq!(v[0].data, trips[1]);
+            assert_eq!(v[1].data, trips[2]);
+            assert_eq!(v[2].data, trips[3]);
+        }
+    }
+    fs::remove_file("var/series.json").expect("remove file failed");
 }
 
 
-#[test]
-/*
+//#[test]
 pub fn persists_and_reads_an_entry() {
     let trips = mk_trips();
-    let mut ts: Series<BikeTrip> = emseries::Series::open("var/series1").expect("expect the time series to open correctly");
 
-    let uuid = ts.put(trips[0].clone());
+    {
+        println!("running the first block");
+        let mut ts: Series<BikeTrip> = emseries::Series::open("var/series").expect("expect the time series to open correctly");
+
+        ts.put(trips[0].clone()).expect("expect a successful put");
+        ts.put(trips[1].clone()).expect("expect a successful put");
+        ts.put(trips[2].clone()).expect("expect a successful put");
+        ts.put(trips[3].clone()).expect("expect a successful put");
+        ts.put(trips[4].clone()).expect("expect a successful put");
+    }
+
+    for name in fs::read_dir("var/").expect("readdir failed") {
+        println!("[persists-and-reads-an-entry] {:?}", name);
+    }
+
+    {
+        let mut ts: Series<BikeTrip> = emseries::Series::open("var/series").expect("expect the time series to open correctly");
+        match ts.search(time_range(Utc.ymd(2011, 10, 31).and_hms(0, 0, 0), true,
+                                   Utc.ymd(2011, 11, 04).and_hms(0, 0, 0), true)) {
+            Err(err) => assert!(false, err),
+            Ok(v) => {
+                assert_eq!(v.len(), 3);
+                assert_eq!(v[0].data, trips[1]);
+                assert_eq!(v[1].data, trips[2]);
+                assert_eq!(v[2].data, trips[3]);
+            }
+        }
+    }
+
+    fs::remove_file("var/series2.json").expect("remove file failed");
+    unimplemented!();
+
+    /*
     match uuid {
         Err(err) => assert!(false, err),
         Ok(uuid_) => {
@@ -145,10 +230,11 @@ pub fn persists_and_reads_an_entry() {
             }
         }
     }
-
+    */
 }
-*/
 
+
+/*
 #[test]
 pub fn reads_existing_file() {
     //let ts = emseries::Series::open("var/fixture-series");
@@ -165,4 +251,5 @@ pub fn can_write_to_existing_file() {
 pub fn can_overwrite_existing_entry() {
     unimplemented!();
 }
+*/
 

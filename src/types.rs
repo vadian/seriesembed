@@ -1,14 +1,20 @@
 extern crate chrono;
+extern crate serde;
+extern crate serde_derive;
+extern crate serde_json;
 extern crate uuid;
 
 
 use std::io;
+use self::serde::ser::{ Serialize, Serializer };
+use self::serde_json::error;
 use self::uuid::Uuid;
 
 use self::chrono::{ DateTime, Utc };
 
 #[derive(Debug)]
 pub enum Error {
+    SerializationError(error::Error),
     IOError(io::Error),
 }
 
@@ -21,9 +27,27 @@ pub trait Recordable
 }
 
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
+pub struct UniqueId(Uuid);
+
+impl UniqueId {
+    pub fn new() -> UniqueId {
+        let id = Uuid::new_v4();
+        UniqueId(id)
+    }
+}
+
+impl Serialize for UniqueId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        serializer.serialize_str(&self.0.hyphenated().to_string())
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
 pub struct Record<T: Clone + Recordable> {
-    pub id: Uuid,
+    pub id: UniqueId,
     pub data: T,
 }
 
@@ -31,7 +55,7 @@ impl <T> Record<T>
     where T: Clone + Recordable
 {
     pub fn new(data: T) -> Record<T> {
-        let id = Uuid::new_v4();
+        let id = UniqueId::new();
         Record{id, data}
     }
 }

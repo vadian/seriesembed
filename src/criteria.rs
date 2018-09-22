@@ -76,3 +76,14 @@ pub fn exact_time(time: DateTime<Utc>) -> And<StartTime, EndTime> {
     }
 }
 
+
+pub fn time_range(start: DateTime<Utc>,
+                  start_incl: bool,
+                  end: DateTime<Utc>,
+                  end_incl: bool) -> And<StartTime, EndTime> {
+    And{
+        lside: StartTime{ time: start, incl: start_incl },
+        rside: EndTime{ time: end, incl: end_incl },
+    }
+}
+

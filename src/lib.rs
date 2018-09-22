@@ -1,3 +1,4 @@
+#[macro_use] extern crate serde_derive;
 /*
 extern crate chrono;
 extern crate serde;
@@ -16,7 +17,7 @@ mod types;
 
 pub use types::{ Error, Record, Recordable };
 pub use series::{ Series };
-pub use criteria::{ Criteria, exact_time };
+pub use criteria::*;
 
 /* A time series needs to read the entire data stream. It also needs to be able to read a single
  * record. This is really just mapping over a line-oriented stream.
