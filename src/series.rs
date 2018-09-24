@@ -2,6 +2,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate uuid;
 
+use self::serde::de::DeserializeOwned;
 use self::serde::ser::Serialize;
 use std::fs::File;
 use std::fs::OpenOptions;
@@ -17,8 +18,8 @@ pub struct Series<T: Clone + Recordable + Serialize> {
 }
 
 
-impl <T> Series<T> 
-    where T: Clone + Recordable + Serialize
+impl <'de, T> Series<T> 
+    where T: Clone + Recordable + DeserializeOwned + Serialize
 {
     pub fn open(path: &str) -> Result<Series<T>, Error> {
         let mut fullpath = String::from(path);
@@ -41,11 +42,23 @@ impl <T> Series<T>
     }
 
     fn load_file(f: &File) -> Result<Vec<Record<T>>, Error> {
+        let mut records: Vec<Record<T>> = Vec::new();
         let reader = BufReader::new(f);
         for line in reader.lines() {
-            println!("[line] {:?}", line);
-        }
-        Ok(Vec::new())
+            match line {
+                Ok(line_) => {
+                    let deser_result: Result<Record<T>, Error> =
+                        serde_json::from_str(&line_)
+                            .map_err(Error::DeserializationError);
+                    match deser_result {
+                        Ok(record) => records.push(record.clone()),
+                        Err(err) => return Err(err),
+                    }
+                },
+                Err(err) => return Err(Error::IOError(err)),
+            }
+        };
+        Ok(records)
     }
 
     pub fn put(&mut self, entry: T) -> Result<UniqueId, Error> {
@@ -53,7 +66,6 @@ impl <T> Series<T>
         self.records.push(rec.clone());
         let write_res = match serde_json::to_string(&rec) {
             Ok(rec_str) => {
-                println!("[put] {}", rec_str.as_str());
                 self.writer.write_fmt(format_args!("{}\n", rec_str.as_str())).map_err(Error::IOError)
             },
             Err(err) => Err(Error::SerializationError(err)),

@@ -4,17 +4,19 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate uuid;
 
-
+use std::fmt;
 use std::io;
+use self::serde::de;
+use self::serde::de::{ Deserialize, Deserializer, Visitor };
 use self::serde::ser::{ Serialize, Serializer };
-use self::serde_json::error;
 use self::uuid::Uuid;
 
 use self::chrono::{ DateTime, Utc };
 
 #[derive(Debug)]
 pub enum Error {
-    SerializationError(error::Error),
+    SerializationError(serde_json::error::Error),
+    DeserializationError(serde_json::error::Error),
     IOError(io::Error),
 }
 
@@ -37,6 +39,33 @@ impl UniqueId {
     }
 }
 
+struct UniqueIdVisitor;
+
+impl <'de> Visitor<'de> for UniqueIdVisitor {
+    type Value = String;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "a string containing a uuid")
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where E: de::Error
+    {
+        Ok(String::from(v))
+    }
+}
+
+impl <'de> Deserialize<'de> for UniqueId {
+    fn deserialize<D>(deserializer: D) -> Result<UniqueId, D::Error>
+        where D: Deserializer<'de>
+    {
+        let val = deserializer.deserialize_str(UniqueIdVisitor)?;
+        Uuid::parse_str(&val)
+            .map(UniqueId)
+            .map_err(|err| de::Error::custom(format!("unexpected error found with input: {}", err.to_string())))
+    }
+}
+
 impl Serialize for UniqueId {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
@@ -45,7 +74,7 @@ impl Serialize for UniqueId {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Record<T: Clone + Recordable> {
     pub id: UniqueId,
     pub data: T,
@@ -73,20 +102,4 @@ impl <T> Recordable for Record<T>
         self.data.values()
     }
 }
-
-/*
-impl <T> Recordable for & 'a Record<T>
-    where T: Clone + Recordable
-{
-    fn timestamp(&self) -> DateTime<Utc> {
-        self.data.timestamp()
-    }
-    fn tags(&self) -> DateTime<Utc> {
-        self.data.tags()
-    }
-    fn values(&self) -> DateTime<Utc> {
-        self.data.values()
-    }
-}
-*/
 

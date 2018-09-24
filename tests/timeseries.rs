@@ -2,26 +2,87 @@ extern crate chrono;
 extern crate dimensioned;
 extern crate emseries;
 extern crate serde;
+#[macro_use] extern crate serde_derive;
 extern crate serde_json;
 extern crate uuid;
 
 use chrono::prelude::*;
 use dimensioned::si::{ M, Meter, S, Second };
+use std::fmt;
 use std::fs;
 use std::ops;
+use serde::de;
+use serde::de::{ Deserialize, Deserializer, Visitor };
 use serde::ser::{ Serialize, Serializer, SerializeStruct };
 //use uuid::Uuid;
 
 use emseries::*;
 
 #[derive(Clone, Debug, PartialEq)]
+struct Distance(Meter<f64>);
+
+struct F64Visitor;
+
+impl <'de> Visitor<'de> for F64Visitor {
+    type Value = f64;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "a 64-bit floating point value")
+    }
+
+    fn visit_f64<E>(self, v: f64) -> Result<Self::Value, E>
+        where E: de::Error
+    {
+        Ok(v)
+    }
+}
+
+impl <'de> Deserialize<'de> for Distance {
+    fn deserialize<D>(deserializer: D) -> Result<Distance, D::Error>
+        where D: Deserializer<'de>
+    {
+        let val = deserializer.deserialize_f64(F64Visitor)?;
+        Ok(Distance(val * M))
+    }
+}
+
+impl Serialize for Distance {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        serializer.serialize_f64(self.0.value_unsafe)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct Duration(Second<f64>);
+
+impl <'de> Deserialize<'de> for Duration {
+    fn deserialize<D>(deserializer: D) -> Result<Duration, D::Error>
+        where D: Deserializer<'de>
+    {
+        let val = deserializer.deserialize_f64(F64Visitor)?;
+        Ok(Duration(val * S))
+    }
+}
+
+impl Serialize for Duration {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        serializer.serialize_f64(self.0.value_unsafe)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 struct BikeTrip {
     datetime: DateTime<Utc>,
-    distance: Meter<f64>,
-    duration: Second<f64>,
+    distance: Distance,
+    duration: Duration,
     comments: String,
 }
 
+/*
 impl Serialize for BikeTrip {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
@@ -34,6 +95,32 @@ impl Serialize for BikeTrip {
         s.end()
     }
 }
+
+struct F64Visitor;
+
+impl <'de> Visitor<'de> for DistanceVisitor {
+    type Value = f64;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "a 64-bit floating point value")
+    }
+
+    fn visit_f64<E>(self, v: f64) -> Result<Self::Value, E>
+        where E: de::Error
+    {
+        Ok(String::from(v))
+    }
+}
+
+
+impl <'de> Deserialize<'de> for BikeTrip {
+    fn deserialize<D>(deserializer: D) -> Result<BikeTrip, D::Error>
+        where D: Deserializer<'de>
+    {
+        
+    }
+}
+*/
 
 impl Recordable for BikeTrip {
     fn timestamp(&self) -> DateTime<Utc> {
@@ -61,32 +148,32 @@ fn mk_trips() -> [BikeTrip; 5] {
     [
         BikeTrip{
             datetime: Utc.ymd(2011, 10, 29).and_hms(0, 0, 0),
-            distance: 58741.055 * M,
-            duration: 11040.0 * S,
+            distance: Distance(58741.055 * M),
+            duration: Duration(11040.0 * S),
             comments: String::from("long time ago"),
         },
         BikeTrip{
             datetime: Utc.ymd(2011, 10, 31).and_hms(0, 0, 0),
-            distance: 17702.0 * M,
-            duration: 2880.0 * S,
+            distance: Distance(17702.0 * M),
+            duration: Duration(2880.0 * S),
             comments: String::from("day 2"),
         },
         BikeTrip{
             datetime: Utc.ymd(2011, 11, 02).and_hms(0, 0, 0),
-            distance: 41842.945 * M,
-            duration: 7020.0 * S,
+            distance: Distance(41842.945 * M),
+            duration: Duration(7020.0 * S),
             comments: String::from("Do Some Distance!"),
         },
         BikeTrip{
             datetime: Utc.ymd(2011, 11, 04).and_hms(0, 0, 0),
-            distance: 34600.895 * M,
-            duration: 5580.0 * S,
+            distance: Distance(34600.895 * M),
+            duration: Duration(5580.0 * S),
             comments: String::from("I did a lot of distance back then"),
         },
         BikeTrip{
             datetime: Utc.ymd(2011, 11, 05).and_hms(0, 0, 0),
-            distance: 6437.376 * M,
-            duration: 960.0 * S,
+            distance: Distance(6437.376 * M),
+            duration: Duration(960.0 * S),
             comments: String::from("day 5"),
         }
     ]
@@ -104,10 +191,10 @@ pub fn check_serialization() {
 
 
 #[test]
-pub fn can_add_and_retrieve_an_entry() {
-    let series_remover = SeriesFileCleanup::new("var/can_add_and_retrieve_an_entry.json");
+pub fn can_add_and_retrieve_entries() {
+    let series_remover = SeriesFileCleanup::new("var/can_add_and_retrieve_entries.json");
     let trips = mk_trips();
-    let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_add_and_retrieve_an_entry").expect("expect the time series to open correctly");
+    let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_add_and_retrieve_entries").expect("expect the time series to open correctly");
     let uuid = ts.put(trips[0].clone()).expect("expect a successful put");
     let record_res = ts.get(uuid.clone());
 
@@ -122,7 +209,7 @@ pub fn can_add_and_retrieve_an_entry() {
         Ok(Some(tr)) => {
             assert_eq!(tr.id, uuid);
             assert_eq!(tr.timestamp(), Utc.ymd(2011, 10, 29).and_hms(0, 0, 0));
-            assert_eq!(tr.data.duration, 11040.0 * S);
+            assert_eq!(tr.data.duration, Duration(11040.0 * S));
             assert_eq!(tr.data.comments, String::from("long time ago"));
             assert_eq!(tr.data, trips[0]);
         }
@@ -203,35 +290,6 @@ pub fn persists_and_reads_an_entry() {
             }
         }
     }
-
-    unimplemented!();
-
-    /*
-    match uuid {
-        Err(err) => assert!(false, err),
-        Ok(uuid_) => {
-            /*
-            let record_res = ts.search(exact_time(Utc.ymd(2011, 10, 29).and_hms(0, 0, 0)));
-            match record_res {
-                Ok(tr) => assert_eq!(tr.len(), 1),
-                Err(err) => assert!(false, err),
-            }
-            */
-
-            let record_res_2: Result<Option<Record<BikeTrip>>, Error> = ts.get(uuid_);
-            match record_res_2 {
-                Err(err) => assert!(false, err),
-                Ok(None) => assert!(false, "There should have been a value here"),
-                Ok(Some(tr)) => {
-                    assert_eq!(tr.id, uuid_);
-                    assert_eq!(tr.timestamp(), Utc.ymd(2011, 10, 29).and_hms(0, 0, 0));
-                    assert_eq!(tr.data.duration, 11040.0 * S);
-                    assert_eq!(tr.data.comments, String::from("long time ago"));
-                }
-            }
-        }
-    }
-    */
 }
 
 
