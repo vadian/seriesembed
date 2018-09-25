@@ -29,7 +29,7 @@ pub trait Recordable
 }
 
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct UniqueId(Uuid);
 
 impl UniqueId {

@@ -4,6 +4,8 @@ extern crate uuid;
 
 use self::serde::de::DeserializeOwned;
 use self::serde::ser::Serialize;
+use std::collections::HashMap;
+use std::cmp::Ordering;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::{ BufRead, BufReader, LineWriter, Write };
@@ -14,7 +16,7 @@ use types::{ Error, Record, Recordable, UniqueId };
 pub struct Series<T: Clone + Recordable + Serialize> {
     path: String,
     writer: LineWriter<File>,
-    records: Vec<Record<T>>,
+    records: HashMap<UniqueId, Record<T>>,
 }
 
 
@@ -41,29 +43,31 @@ impl <'de, T> Series<T>
         })
     }
 
-    fn load_file(f: &File) -> Result<Vec<Record<T>>, Error> {
-        let mut records: Vec<Record<T>> = Vec::new();
+    fn load_file(f: &File) -> Result<HashMap<UniqueId, Record<T>>, Error> {
+        let mut records: HashMap<UniqueId, Record<T>> = HashMap::new();
         let reader = BufReader::new(f);
         for line in reader.lines() {
             match line {
                 Ok(line_) => {
-                    let deser_result: Result<Record<T>, Error> =
-                        serde_json::from_str(&line_)
-                            .map_err(Error::DeserializationError);
-                    match deser_result {
-                        Ok(record) => records.push(record.clone()),
+                    match Series::parse_line(&line_) {
+                        Ok(record) => records.insert(record.id.clone(), record.clone()),
                         Err(err) => return Err(err),
-                    }
-                },
+                    };
+                }
                 Err(err) => return Err(Error::IOError(err)),
             }
         };
         Ok(records)
     }
 
+    fn parse_line(line: &str) -> Result<Record<T>, Error> {
+        serde_json::from_str(&line)
+            .map_err(Error::DeserializationError)
+    }
+
     pub fn put(&mut self, entry: T) -> Result<UniqueId, Error> {
         let rec = Record::new(entry);
-        self.records.push(rec.clone());
+        self.records.insert(rec.id.clone(), rec.clone());
         let write_res = match serde_json::to_string(&rec) {
             Ok(rec_str) => {
                 self.writer.write_fmt(format_args!("{}\n", rec_str.as_str())).map_err(Error::IOError)
@@ -77,26 +81,44 @@ impl <'de, T> Series<T>
         }
     }
 
+    pub fn update(&mut self, entry: Record<T>) -> Result<(), Error> {
+        unimplemented!()
+    }
+
     pub fn search<C>(&self, criteria: C) -> Result<Vec<Record<T>>, Error>
         where C: Criteria {
         let results: Vec<Record<T>> =
             self.records
                 .iter()
-                .filter(|&tr| criteria.apply(tr))
-                .map(|tr| tr.clone())
+                .filter(|&tr| criteria.apply(tr.1))
+                .map(|tr| tr.1.clone())
                 .collect();
         Ok(results)
     }
 
-    pub fn get(&self, uuid: UniqueId) -> Result<Option<Record<T>>, Error> {
-        let mut matches: Vec<&Record<T>> = self.records.iter().filter(|r| r.id == uuid).collect();
-        let val: Option<&Record<T>> = matches.pop();
+    pub fn search_sorted<C, CMP>(&self, criteria: C, compare: CMP) -> Result<Vec<Record<T>>, Error>
+        where C: Criteria,
+              CMP: FnMut(&Record<T>, &Record<T>) -> Ordering
+    {
+        match self.search(criteria) {
+            Ok(mut records) => {
+                records.sort_by(compare);
+                Ok(records)
+            },
+            Err(err) => Err(err),
+        }
+    }
+
+    pub fn get(&self, uuid: &UniqueId) -> Result<Option<Record<T>>, Error> {
+        let val = self.records.get(uuid);
         Ok(val.cloned())
     }
     
+    /*
     pub fn remove(&self, uuid: UniqueId) -> Result<(), Error> {
         unimplemented!()
     }
+    */
 }
 
 
