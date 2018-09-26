@@ -299,6 +299,38 @@ pub fn can_overwrite_existing_entry() {
     let _series_remover = SeriesFileCleanup::new("var/can_overwrite_existing_entry.json");
     let trips = mk_trips();
 
+    let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_overwrite_existing_entry").expect("expect the time series to open correctly");
+
+    ts.put(trips[0].clone()).expect("expect a successful put");
+    ts.put(trips[1].clone()).expect("expect a successful put");
+    let trip_id = ts.put(trips[2].clone()).expect("expect a successful put");
+
+    match ts.get(&trip_id) {
+        Err(err) => assert!(false, err),
+        Ok(None) => assert!(false, "record not found"),
+        Ok(Some(mut trip)) => {
+            trip.data.distance = Distance(50000.0 * M);
+            ts.update(trip).expect("expect record to update");
+        }
+    };
+
+    match ts.get(&trip_id) {
+        Err(err) => assert!(false, err),
+        Ok(None) => assert!(false, "record not found"),
+        Ok(Some(trip)) => {
+            assert_eq!(trip.data.datetime, Utc.ymd(2011, 11, 02).and_hms(0, 0, 0));
+            assert_eq!(trip.data.distance, Distance(50000.0 * M));
+            assert_eq!(trip.data.duration, Duration(7020.0 * S));
+            assert_eq!(trip.data.comments, String::from("Do Some Distance!"));
+        }
+    }
+}
+
+#[test]
+pub fn record_overwrites_get_persisted() {
+    let _series_remover = SeriesFileCleanup::new("var/can_overwrite_existing_entry.json");
+    let trips = mk_trips();
+
     {
         let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_overwrite_existing_entry").expect("expect the time series to open correctly");
 
@@ -314,17 +346,6 @@ pub fn can_overwrite_existing_entry() {
                 ts.update(trip).expect("expect record to update");
             }
         };
-
-        match ts.get(&trip_id) {
-            Err(err) => assert!(false, err),
-            Ok(None) => assert!(false, "record not found"),
-            Ok(Some(trip)) => {
-                assert_eq!(trip.data.datetime, Utc.ymd(2011, 11, 02).and_hms(0, 0, 0));
-                assert_eq!(trip.data.distance, Distance(50000.0 * M));
-                assert_eq!(trip.data.duration, Duration(7020.0 * S));
-                assert_eq!(trip.data.comments, String::from("Do Some Distance!"));
-            }
-        }
     }
 
     {

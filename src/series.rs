@@ -66,9 +66,14 @@ impl <'de, T> Series<T>
     }
 
     pub fn put(&mut self, entry: T) -> Result<UniqueId, Error> {
-        let rec = Record::new(entry);
-        self.records.insert(rec.id.clone(), rec.clone());
-        let write_res = match serde_json::to_string(&rec) {
+        let record = Record::new(entry);
+        let rec_id = record.id.clone();
+        self.update(record).and_then(|()| Ok(rec_id))
+    }
+
+    pub fn update(&mut self, record: Record<T>) -> Result<(), Error> {
+        self.records.insert(record.id.clone(), record.clone());
+        let write_res = match serde_json::to_string(&record) {
             Ok(rec_str) => {
                 self.writer.write_fmt(format_args!("{}\n", rec_str.as_str())).map_err(Error::IOError)
             },
@@ -76,13 +81,9 @@ impl <'de, T> Series<T>
         };
 
         match write_res {
-            Ok(_) => Ok(rec.id),
+            Ok(_) => Ok(()),
             Err(err) => Err(err),
         }
-    }
-
-    pub fn update(&mut self, entry: Record<T>) -> Result<(), Error> {
-        unimplemented!()
     }
 
     pub fn search<C>(&self, criteria: C) -> Result<Vec<Record<T>>, Error>
