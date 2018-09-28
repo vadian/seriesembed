@@ -14,6 +14,7 @@ use self::chrono::{ DateTime, Utc };
 
 #[derive(Debug)]
 pub enum Error {
+    ParseError(String),
     SerializationError(serde_json::error::Error),
     DeserializationError(serde_json::error::Error),
     IOError(io::Error),
@@ -35,6 +36,12 @@ impl UniqueId {
     pub fn new() -> UniqueId {
         let id = Uuid::new_v4();
         UniqueId(id)
+    }
+
+    pub fn from_str(val: &str) -> Result<UniqueId, Error> {
+        Uuid::parse_str(val)
+            .map(UniqueId)
+            .map_err(|err| Error::ParseError(format!("{}", err)))
     }
 }
 

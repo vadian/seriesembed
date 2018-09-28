@@ -41,7 +41,7 @@ impl <'de, T> Series<T>
         })
     }
 
-    fn load_file(f: &File) -> Result<HashMap<UniqueId, Record<T>>, Error> {
+    pub fn load_file(f: &File) -> Result<HashMap<UniqueId, Record<T>>, Error> {
         let mut records: HashMap<UniqueId, Record<T>> = HashMap::new();
         let reader = BufReader::new(f);
         for line in reader.lines() {
@@ -58,7 +58,7 @@ impl <'de, T> Series<T>
         Ok(records)
     }
 
-    fn parse_line(line: &str) -> Result<Record<T>, Error> {
+    pub fn parse_line(line: &str) -> Result<Record<T>, Error> {
         serde_json::from_str(&line)
             .map_err(Error::DeserializationError)
     }
@@ -82,6 +82,11 @@ impl <'de, T> Series<T>
             Ok(_) => Ok(()),
             Err(err) => Err(err),
         }
+    }
+
+    pub fn all_records(&self) -> Result<Vec<Record<T>>, Error> {
+        let results = self.records.iter().map(|tr| tr.1.clone()).collect();
+        Ok(results)
     }
 
     pub fn search<C>(&self, criteria: C) -> Result<Vec<Record<T>>, Error>

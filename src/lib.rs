@@ -15,7 +15,7 @@ mod criteria;
 mod series;
 mod types;
 
-pub use types::{ Error, Record, Recordable };
+pub use types::{ Error, Record, Recordable, UniqueId };
 pub use series::{ Series };
 pub use criteria::*;
 
