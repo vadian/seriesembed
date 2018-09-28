@@ -143,7 +143,7 @@ fn mk_trips() -> [BikeTrip; 5] {
 pub fn can_add_and_retrieve_entries() {
     let _series_remover = SeriesFileCleanup::new("var/can_add_and_retrieve_entries.json");
     let trips = mk_trips();
-    let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_add_and_retrieve_entries").expect("expect the time series to open correctly");
+    let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_add_and_retrieve_entries.json").expect("expect the time series to open correctly");
     let uuid = ts.put(trips[0].clone()).expect("expect a successful put");
     let record_res = ts.get(&uuid);
 
@@ -170,7 +170,7 @@ pub fn can_add_and_retrieve_entries() {
 pub fn can_search_for_an_entry_with_exact_time() {
     let _series_remover = SeriesFileCleanup::new("var/can_search_for_an_entry_with_exact_time.json");
     let trips = mk_trips();
-    let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_search_for_an_entry_with_exact_time").expect("expect the time series to open correctly");
+    let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_search_for_an_entry_with_exact_time.json").expect("expect the time series to open correctly");
     ts.put(trips[0].clone()).expect("expect a successful put");
     ts.put(trips[1].clone()).expect("expect a successful put");
     ts.put(trips[2].clone()).expect("expect a successful put");
@@ -191,7 +191,7 @@ pub fn can_search_for_an_entry_with_exact_time() {
 pub fn can_get_entries_in_time_range() {
     let _series_remover = SeriesFileCleanup::new("var/can_get_entries_in_time_range.json");
     let trips = mk_trips();
-    let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_get_entries_in_time_range").expect("expect the time series to open correctly");
+    let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_get_entries_in_time_range.json").expect("expect the time series to open correctly");
     ts.put(trips[0].clone()).expect("expect a successful put");
     ts.put(trips[1].clone()).expect("expect a successful put");
     ts.put(trips[2].clone()).expect("expect a successful put");
@@ -219,7 +219,7 @@ pub fn persists_and_reads_an_entry() {
     let trips = mk_trips();
 
     {
-        let mut ts: Series<BikeTrip> = emseries::Series::open("var/persists_and_reads_an_entry").expect("expect the time series to open correctly");
+        let mut ts: Series<BikeTrip> = emseries::Series::open("var/persists_and_reads_an_entry.json").expect("expect the time series to open correctly");
 
         ts.put(trips[0].clone()).expect("expect a successful put");
         ts.put(trips[1].clone()).expect("expect a successful put");
@@ -229,7 +229,7 @@ pub fn persists_and_reads_an_entry() {
     }
 
     {
-        let ts: Series<BikeTrip> = emseries::Series::open("var/persists_and_reads_an_entry").expect("expect the time series to open correctly");
+        let ts: Series<BikeTrip> = emseries::Series::open("var/persists_and_reads_an_entry.json").expect("expect the time series to open correctly");
         match ts.search_sorted(
             time_range(Utc.ymd(2011, 10, 31).and_hms(0, 0, 0), true,
                        Utc.ymd(2011, 11, 04).and_hms(0, 0, 0), true),
@@ -252,7 +252,7 @@ pub fn can_write_to_existing_file() {
     let trips = mk_trips();
 
     {
-        let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_write_to_existing_file").expect("expect the time series to open correctly");
+        let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_write_to_existing_file.json").expect("expect the time series to open correctly");
 
         ts.put(trips[0].clone()).expect("expect a successful put");
         ts.put(trips[1].clone()).expect("expect a successful put");
@@ -260,7 +260,7 @@ pub fn can_write_to_existing_file() {
     }
 
     {
-        let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_write_to_existing_file").expect("expect the time series to open correctly");
+        let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_write_to_existing_file.json").expect("expect the time series to open correctly");
         match ts.search_sorted(
             time_range(Utc.ymd(2011, 10, 31).and_hms(0, 0, 0), true,
                        Utc.ymd(2011, 11, 04).and_hms(0, 0, 0), true),
@@ -277,7 +277,7 @@ pub fn can_write_to_existing_file() {
     }
 
     {
-        let ts: Series<BikeTrip> = emseries::Series::open("var/can_write_to_existing_file").expect("expect the time series to open correctly");
+        let ts: Series<BikeTrip> = emseries::Series::open("var/can_write_to_existing_file.json").expect("expect the time series to open correctly");
         match ts.search_sorted(
             time_range(Utc.ymd(2011, 10, 31).and_hms(0, 0, 0), true,
                        Utc.ymd(2011, 11, 05).and_hms(0, 0, 0), true),
@@ -299,7 +299,7 @@ pub fn can_overwrite_existing_entry() {
     let _series_remover = SeriesFileCleanup::new("var/can_overwrite_existing_entry.json");
     let trips = mk_trips();
 
-    let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_overwrite_existing_entry").expect("expect the time series to open correctly");
+    let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_overwrite_existing_entry.json").expect("expect the time series to open correctly");
 
     ts.put(trips[0].clone()).expect("expect a successful put");
     ts.put(trips[1].clone()).expect("expect a successful put");
@@ -332,7 +332,7 @@ pub fn record_overwrites_get_persisted() {
     let trips = mk_trips();
 
     {
-        let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_overwrite_existing_entry").expect("expect the time series to open correctly");
+        let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_overwrite_existing_entry.json").expect("expect the time series to open correctly");
 
         ts.put(trips[0].clone()).expect("expect a successful put");
         ts.put(trips[1].clone()).expect("expect a successful put");
@@ -349,7 +349,7 @@ pub fn record_overwrites_get_persisted() {
     }
 
     {
-        let ts: Series<BikeTrip> = emseries::Series::open("var/can_overwrite_existing_entry").expect("expect the time series to open correctly");
+        let ts: Series<BikeTrip> = emseries::Series::open("var/can_overwrite_existing_entry.json").expect("expect the time series to open correctly");
 
         match ts.search(exact_time(Utc.ymd(2011, 11, 02).and_hms(0, 0, 0))) {
             Err(err) => assert!(false, err),

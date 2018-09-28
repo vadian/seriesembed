@@ -24,12 +24,10 @@ impl <'de, T> Series<T>
     where T: Clone + Recordable + DeserializeOwned + Serialize
 {
     pub fn open(path: &str) -> Result<Series<T>, Error> {
-        let mut fullpath = String::from(path);
-        fullpath.push_str(".json");
         let f = OpenOptions::new().read(true)
                                   .append(true)
                                   .create(true)
-                                  .open(&fullpath)
+                                  .open(&path)
                                   .map_err(Error::IOError)?;
 
         let records = Series::load_file(&f)?;
