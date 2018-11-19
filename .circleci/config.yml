@@ -19,6 +19,7 @@ jobs:
           - dep-sol-
 
     - run: cargo build
+    - run: mkdir var
     - run: cargo test
 
     - save_cache:
