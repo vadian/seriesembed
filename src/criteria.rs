@@ -68,6 +68,14 @@ pub struct Tags {
     pub tags: Vec<String>,
 }
 
+impl Criteria for Tags {
+    fn apply<T: Recordable>(&self, record: &T) -> bool {
+        let record_tags = record.tags();
+        let mismatched_tags: Vec<bool> = self.tags.iter().map(|v| record_tags.contains(v)).filter(|v| !v).collect();
+        mismatched_tags.len() == 0
+    }
+}
+
 
 pub fn exact_time(time: DateTime<Utc>) -> And<StartTime, EndTime> {
     And{
