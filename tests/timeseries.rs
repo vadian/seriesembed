@@ -351,6 +351,11 @@ pub fn record_overwrites_get_persisted() {
     {
         let ts: Series<BikeTrip> = emseries::Series::open("var/can_overwrite_existing_entry.json").expect("expect the time series to open correctly");
 
+        match ts.all_records() {
+            Err(err) => assert!(false, err),
+            Ok(trips) => { assert_eq!(trips.len(), 3) },
+        }
+
         match ts.search(exact_time(Utc.ymd(2011, 11, 02).and_hms(0, 0, 0))) {
             Err(err) => assert!(false, err),
             Ok(trips) => {
