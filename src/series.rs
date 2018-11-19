@@ -89,6 +89,16 @@ impl <'de, T> Series<T>
         Ok(results)
     }
 
+    /* Commented out because I just cannot figure out the type signature
+    pub fn records(&self) -> Result<Map<Iterator<Item=Record<T>>, FnMut(Record<T>) -> Record<T>>, Error> {
+    pub fn records(&self) -> std::result::Result<Map<hash_map::Iter<'_, UniqueId, Record<T>>, Fn(Record<T>) -> Record<T>>, Error> {
+        let results = self.records.iter().map(|tr| tr.1.clone());
+        Ok(results)
+    }
+    */
+
+    /*  The point of having Search is so that a lot of internal optimizations can happen once the
+     *  data sets start getting large. */
     pub fn search<C>(&self, criteria: C) -> Result<Vec<Record<T>>, Error>
         where C: Criteria {
         let results: Vec<Record<T>> =
