@@ -14,7 +14,7 @@ use criteria::{ Criteria };
 use types::{ Error, Record, Recordable, UniqueId };
 
 pub struct Series<T: Clone + Recordable + Serialize> {
-    path: String,
+    //path: String,
     writer: LineWriter<File>,
     records: HashMap<UniqueId, Record<T>>,
 }
@@ -35,7 +35,7 @@ impl <'de, T> Series<T>
         let writer = LineWriter::new(f);
         
         Ok(Series{
-            path: String::from(path),
+            //path: String::from(path),
             writer,
             records,
         })

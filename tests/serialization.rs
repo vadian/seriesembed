@@ -7,7 +7,7 @@ extern crate serde;
 use chrono::prelude::*;
 use dimensioned::si::{ KG, Kilogram };
 use emseries::{ Error, Record, Recordable, Series, UniqueId };
-use serde::de;
+//use serde::de;
 use serde::de::{ Deserialize, Deserializer };
 use serde::ser::{ Serialize, Serializer };
 
