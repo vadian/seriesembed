@@ -328,11 +328,11 @@ pub fn can_overwrite_existing_entry() {
 
 #[test]
 pub fn record_overwrites_get_persisted() {
-    let _series_remover = SeriesFileCleanup::new("var/can_overwrite_existing_entry.json");
+    let _series_remover = SeriesFileCleanup::new("var/record_overwrites_get_persisted.json");
     let trips = mk_trips();
 
     {
-        let mut ts: Series<BikeTrip> = emseries::Series::open("var/can_overwrite_existing_entry.json").expect("expect the time series to open correctly");
+        let mut ts: Series<BikeTrip> = emseries::Series::open("var/record_overwrites_get_persisted.json").expect("expect the time series to open correctly");
 
         ts.put(trips[0].clone()).expect("expect a successful put");
         ts.put(trips[1].clone()).expect("expect a successful put");
@@ -349,7 +349,7 @@ pub fn record_overwrites_get_persisted() {
     }
 
     {
-        let ts: Series<BikeTrip> = emseries::Series::open("var/can_overwrite_existing_entry.json").expect("expect the time series to open correctly");
+        let ts: Series<BikeTrip> = emseries::Series::open("var/record_overwrites_get_persisted.json").expect("expect the time series to open correctly");
 
         match ts.all_records() {
             Err(err) => assert!(false, err),
