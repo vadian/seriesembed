@@ -1,0 +1,28 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/luminescent-dreams/emseries
+    parallelism: 1
+    shell: /bin/bash --login
+
+    docker:
+    - image: savannidgerinel/rust:latest
+
+    steps:
+    - checkout
+
+    - restore_cache:
+        keys:
+          # This branch if available
+          - dep-{{ .Branch }}-
+          # Default branch if not
+          - dep-sol-
+
+    - run: cargo build
+    - run: cargo test
+
+    - save_cache:
+        key: dep-{{ .Branch }}-{{ epoch }}
+        paths:
+        - ~/.cargo
+
