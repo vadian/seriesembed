@@ -19,6 +19,12 @@ jobs:
           - dep-sol-
 
     - run: cargo build
+
+    - save_cache:
+        key: dep-{{ .Branch }}-{{ epoch }}
+        paths:
+        - ~/.cargo
+
     - run: mkdir var
     - run: cargo test
 
