@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  build-lfs:
     working_directory: ~/luminescent-dreams/emseries
     parallelism: 1
     shell: /bin/bash --login
