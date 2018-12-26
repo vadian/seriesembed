@@ -33,3 +33,22 @@ jobs:
         paths:
         - ~/.cargo
 
+  build-nix:
+    working_directory: ~/luminescent-dreams/emseries
+    parallelism: 1
+
+    docker:
+    - image: nixos/nix
+
+    steps:
+    - checkout
+    - run: nix-build ./Cargo.nix -A emseries
+
+workflows:
+  version: 2
+  build_all:
+    jobs:
+      - build-lfs
+      - build-nix
+
+
