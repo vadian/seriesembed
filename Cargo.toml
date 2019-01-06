@@ -2,6 +2,19 @@
 name = "emseries"
 version = "0.1.0"
 authors = ["Savanni D'Gerinel <savanni@luminescent-dreams.com>"]
+description = "an Embedded Time Series database"
+license = "BSD3"
+license-file = "LICENSE"
+documentation = "https://github.com/luminescent-dreams/emseries"
+homepage = "https://github.com/luminescent-dreams/emseries"
+repository = "https://github.com/luminescent-dreams/emseries"
+categories = ["database-implementations"]
+
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+    "fixtures/*",
+]
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
