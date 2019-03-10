@@ -12,7 +12,7 @@ let cratesIO = callPackage ./crates-io.nix { };
     crateName = "emseries";
     version = "0.1.0";
     authors = [ "Savanni D'Gerinel <savanni@luminescent-dreams.com>" ];
-    src = exclude [ ".git" "target" ] ./.;
+    src = include [ "**/*.rs" "Cargo.toml" "fixtures/*" ] ./.;
     dependencies = mapFeatures features ([
       (cratesIO.crates."chrono"."${deps."emseries"."0.1.0"."chrono"}" deps)
       (cratesIO.crates."dimensioned"."${deps."emseries"."0.1.0"."dimensioned"}" deps)
@@ -28,12 +28,16 @@ let cratesIO = callPackage ./crates-io.nix { };
       { "${deps.emseries."0.1.0".chrono}"."serde" = true; }
       { "${deps.emseries."0.1.0".chrono}".default = true; }
     ];
-    dimensioned."${deps.emseries."0.1.0".dimensioned}".default = true;
+    dimensioned = fold recursiveUpdate {} [
+      { "${deps.emseries."0.1.0".dimensioned}"."serde" = true; }
+      { "${deps.emseries."0.1.0".dimensioned}".default = true; }
+    ];
     emseries."0.1.0".default = (f.emseries."0.1.0".default or true);
     serde."${deps.emseries."0.1.0".serde}".default = true;
     serde_derive."${deps.emseries."0.1.0".serde_derive}".default = true;
     serde_json."${deps.emseries."0.1.0".serde_json}".default = true;
     uuid = fold recursiveUpdate {} [
+      { "${deps.emseries."0.1.0".uuid}"."serde" = true; }
       { "${deps.emseries."0.1.0".uuid}"."v4" = true; }
       { "${deps.emseries."0.1.0".uuid}".default = true; }
     ];
@@ -67,6 +71,7 @@ rec {
   deps.dimensioned."0.7.0" = {
     generic_array = "0.11.1";
     num_traits = "0.2.5";
+    serde = "1.0.70";
     typenum = "1.10.0";
   };
   deps.dtoa."0.4.3" = {};
@@ -132,6 +137,7 @@ rec {
   deps.uuid."0.6.5" = {
     cfg_if = "0.1.4";
     rand = "0.4.2";
+    serde = "1.0.70";
   };
   deps.winapi."0.3.5" = {
     winapi_i686_pc_windows_gnu = "0.4.0";

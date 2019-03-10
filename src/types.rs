@@ -3,11 +3,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate uuid;
 
-use std::fmt;
 use std::io;
-use self::serde::de;
-use self::serde::de::{Deserialize, Deserializer, Visitor};
-use self::serde::ser::{Serialize, Serializer};
 use self::uuid::Uuid;
 
 use self::chrono::{DateTime, Utc};
@@ -46,7 +42,7 @@ pub trait Recordable {
 /// Uniquely identifies a record.
 ///
 /// This is a wrapper around a basic uuid with some extra convenience methods.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq, Deserialize, Serialize)]
 pub struct UniqueId(Uuid);
 
 impl UniqueId {
@@ -61,47 +57,6 @@ impl UniqueId {
         Uuid::parse_str(val).map(UniqueId).map_err(|err| {
             Error::UUIDParseError(err)
         })
-    }
-}
-
-struct UniqueIdVisitor;
-
-impl<'de> Visitor<'de> for UniqueIdVisitor {
-    type Value = String;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        write!(formatter, "a string containing a uuid")
-    }
-
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-    where
-        E: de::Error,
-    {
-        Ok(String::from(v))
-    }
-}
-
-impl<'de> Deserialize<'de> for UniqueId {
-    fn deserialize<D>(deserializer: D) -> Result<UniqueId, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let val = deserializer.deserialize_str(UniqueIdVisitor)?;
-        Uuid::parse_str(&val).map(UniqueId).map_err(|err| {
-            de::Error::custom(format!(
-                "unexpected error found with input: {}",
-                err.to_string()
-            ))
-        })
-    }
-}
-
-impl Serialize for UniqueId {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(&self.0.hyphenated().to_string())
     }
 }
 

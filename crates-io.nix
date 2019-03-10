@@ -86,7 +86,8 @@ rec {
       (crates."generic_array"."${deps."dimensioned"."0.7.0"."generic_array"}" deps)
       (crates."num_traits"."${deps."dimensioned"."0.7.0"."num_traits"}" deps)
       (crates."typenum"."${deps."dimensioned"."0.7.0"."typenum"}" deps)
-    ]);
+    ]
+      ++ (if features.dimensioned."0.7.0".serde or false then [ (crates.serde."${deps."dimensioned"."0.7.0".serde}" deps) ] else []));
     features = mkFeatures (features."dimensioned"."0.7.0" or {});
   };
   features_.dimensioned."0.7.0" = deps: f: updateFeatures f (rec {
@@ -123,10 +124,12 @@ rec {
     ];
     generic_array."${deps.dimensioned."0.7.0".generic_array}".default = true;
     num_traits."${deps.dimensioned."0.7.0".num_traits}".default = (f.num_traits."${deps.dimensioned."0.7.0".num_traits}".default or false);
+    serde."${deps.dimensioned."0.7.0".serde}".default = true;
     typenum."${deps.dimensioned."0.7.0".typenum}".default = true;
   }) [
     (features_.generic_array."${deps."dimensioned"."0.7.0"."generic_array"}" deps)
     (features_.num_traits."${deps."dimensioned"."0.7.0"."num_traits"}" deps)
+    (features_.serde."${deps."dimensioned"."0.7.0"."serde"}" deps)
     (features_.typenum."${deps."dimensioned"."0.7.0"."typenum"}" deps)
   ];
 
@@ -707,12 +710,14 @@ rec {
     dependencies = mapFeatures features ([
       (crates."cfg_if"."${deps."uuid"."0.6.5"."cfg_if"}" deps)
     ]
-      ++ (if features.uuid."0.6.5".rand or false then [ (crates.rand."${deps."uuid"."0.6.5".rand}" deps) ] else []));
+      ++ (if features.uuid."0.6.5".rand or false then [ (crates.rand."${deps."uuid"."0.6.5".rand}" deps) ] else [])
+      ++ (if features.uuid."0.6.5".serde or false then [ (crates.serde."${deps."uuid"."0.6.5".serde}" deps) ] else []));
     features = mkFeatures (features."uuid"."0.6.5" or {});
   };
   features_.uuid."0.6.5" = deps: f: updateFeatures f (rec {
     cfg_if."${deps.uuid."0.6.5".cfg_if}".default = true;
     rand."${deps.uuid."0.6.5".rand}".default = true;
+    serde."${deps.uuid."0.6.5".serde}".default = (f.serde."${deps.uuid."0.6.5".serde}".default or false);
     uuid = fold recursiveUpdate {} [
       { "0.6.5".byteorder =
         (f.uuid."0.6.5".byteorder or false) ||
@@ -749,6 +754,7 @@ rec {
   }) [
     (features_.cfg_if."${deps."uuid"."0.6.5"."cfg_if"}" deps)
     (features_.rand."${deps."uuid"."0.6.5"."rand"}" deps)
+    (features_.serde."${deps."uuid"."0.6.5"."serde"}" deps)
   ];
 
 

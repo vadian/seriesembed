@@ -4,7 +4,6 @@ version = "0.1.0"
 authors = ["Savanni D'Gerinel <savanni@luminescent-dreams.com>"]
 description = "an Embedded Time Series database"
 license = "BSD-3-Clause"
-license-file = "LICENSE"
 documentation = "https://github.com/luminescent-dreams/emseries"
 homepage = "https://github.com/luminescent-dreams/emseries"
 repository = "https://github.com/luminescent-dreams/emseries"
@@ -18,10 +17,9 @@ include = [
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
-dimensioned = "0.7.0"
+dimensioned = { version = "0.7.0", features = ["serde"] }
 serde = "1"
 serde_derive = "1"
 serde_json = "1.0"
-uuid = { version = "0.6.5", features = ["v4"] }
+uuid = { version = "0.6.5", features = ["v4", "serde"] }
 yaml-rust = "0.4.0"
-
