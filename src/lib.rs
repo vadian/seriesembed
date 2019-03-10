@@ -1,31 +1,14 @@
-#[macro_use] extern crate serde_derive;
-/*
-extern crate chrono;
-extern crate serde;
-extern crate serde_json;
-extern crate uuid;
-*/
-
-//use chrono::prelude::*;
-//use std::fs::File;
-//use std::io::{ [> BufRead, <] BufWriter };
-//use uuid::{ Uuid };
+//! An Embedded Time Series Database
+//!
+//! This library provides a low-intensity time series database meant to be embedded inside of an
+//! application. The database is implemented as an append-only JSON file.
+#[macro_use]
+extern crate serde_derive;
 
 mod criteria;
 mod series;
 mod types;
 
-pub use types::{ Error, Record, Recordable, UniqueId };
-pub use series::{ Series };
+pub use types::{Error, Record, Recordable, UniqueId};
+pub use series::Series;
 pub use criteria::*;
-
-/* A time series needs to read the entire data stream. It also needs to be able to read a single
- * record. This is really just mapping over a line-oriented stream.
- *
- * My write pattern requires that the output file be kept open indefinitely.
- *
- * My read pattern requires that the input file be open just long enough to read everything, unless
- * I decide to start chunking data. And I think I'm going to avoid that for now.
- */
-
-

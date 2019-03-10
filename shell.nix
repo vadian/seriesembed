@@ -6,10 +6,7 @@ in pkgs.stdenv.mkDerivation {
 
     buildInputs = [ pkgs.rustc
                     pkgs.cargo
+                    pkgs.rustfmt
                     unstable.carnix
                   ];
-
-    shellHook = ''
-        export PS1="[$name] \[$txtgrn\]\u@\h\[$txtwht\]:\[$bldpur\]\w \[$txtcyn\]\$git_branch\[$txtred\]\$git_dirty \[$bldylw\]\$aws_env\[$txtrst\]\$ "
-    '';
 }
