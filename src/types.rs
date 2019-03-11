@@ -3,10 +3,12 @@ extern crate serde;
 extern crate serde_json;
 extern crate uuid;
 
-use std::io;
-use self::uuid::Uuid;
-
 use self::chrono::{DateTime, Utc};
+use self::uuid::Uuid;
+use std::error;
+use std::fmt;
+use std::io;
+
 
 /// Errors for the database
 #[derive(Debug)]
@@ -22,6 +24,39 @@ pub enum Error {
 
     /// Indicates a general IO error
     IOError(io::Error),
+}
+
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::UUIDParseError(err) => write!(f, "UUID failed to parse: {}", err),
+            Error::SerializationError(err) => write!(f, "Serialization error: {}", err),
+            Error::DeserializationError(err) => write!(f, "Deserialization error: {}", err),
+            Error::IOError(err) => write!(f, "IO Error: {}", err),
+        }
+    }
+}
+
+
+impl error::Error for Error {
+    fn description(&self) -> &str {
+        match self {
+            Error::UUIDParseError(ref err) => err.description(),
+            Error::SerializationError(ref err) => err.description(),
+            Error::DeserializationError(ref err) => err.description(),
+            Error::IOError(ref err) => err.description(),
+        }
+    }
+
+    fn cause(&self) -> Option<&error::Error> {
+        match self {
+            Error::UUIDParseError(ref err) => Some(err),
+            Error::SerializationError(ref err) => Some(err),
+            Error::DeserializationError(ref err) => Some(err),
+            Error::IOError(ref err) => Some(err),
+        }
+    }
 }
 
 
