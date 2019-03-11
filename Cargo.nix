@@ -6,50 +6,50 @@ let inherit (lib.lists) fold;
 in
 let cratesIO = callPackage ./crates-io.nix { };
     crates = cratesIO // rec {
-# emseries-0.1.0
+# emseries-0.2.0
 
-  crates.emseries."0.1.0" = deps: { features?(features_.emseries."0.1.0" deps {}) }: buildRustCrate {
+  crates.emseries."0.2.0" = deps: { features?(features_.emseries."0.2.0" deps {}) }: buildRustCrate {
     crateName = "emseries";
-    version = "0.1.0";
+    version = "0.2.0";
     authors = [ "Savanni D'Gerinel <savanni@luminescent-dreams.com>" ];
     src = include [ "**/*.rs" "Cargo.toml" "fixtures/*" ] ./.;
     dependencies = mapFeatures features ([
-      (cratesIO.crates."chrono"."${deps."emseries"."0.1.0"."chrono"}" deps)
-      (cratesIO.crates."dimensioned"."${deps."emseries"."0.1.0"."dimensioned"}" deps)
-      (cratesIO.crates."serde"."${deps."emseries"."0.1.0"."serde"}" deps)
-      (cratesIO.crates."serde_derive"."${deps."emseries"."0.1.0"."serde_derive"}" deps)
-      (cratesIO.crates."serde_json"."${deps."emseries"."0.1.0"."serde_json"}" deps)
-      (cratesIO.crates."uuid"."${deps."emseries"."0.1.0"."uuid"}" deps)
-      (cratesIO.crates."yaml_rust"."${deps."emseries"."0.1.0"."yaml_rust"}" deps)
+      (cratesIO.crates."chrono"."${deps."emseries"."0.2.0"."chrono"}" deps)
+      (cratesIO.crates."dimensioned"."${deps."emseries"."0.2.0"."dimensioned"}" deps)
+      (cratesIO.crates."serde"."${deps."emseries"."0.2.0"."serde"}" deps)
+      (cratesIO.crates."serde_derive"."${deps."emseries"."0.2.0"."serde_derive"}" deps)
+      (cratesIO.crates."serde_json"."${deps."emseries"."0.2.0"."serde_json"}" deps)
+      (cratesIO.crates."uuid"."${deps."emseries"."0.2.0"."uuid"}" deps)
+      (cratesIO.crates."yaml_rust"."${deps."emseries"."0.2.0"."yaml_rust"}" deps)
     ]);
   };
-  features_.emseries."0.1.0" = deps: f: updateFeatures f (rec {
+  features_.emseries."0.2.0" = deps: f: updateFeatures f (rec {
     chrono = fold recursiveUpdate {} [
-      { "${deps.emseries."0.1.0".chrono}"."serde" = true; }
-      { "${deps.emseries."0.1.0".chrono}".default = true; }
+      { "${deps.emseries."0.2.0".chrono}"."serde" = true; }
+      { "${deps.emseries."0.2.0".chrono}".default = true; }
     ];
     dimensioned = fold recursiveUpdate {} [
-      { "${deps.emseries."0.1.0".dimensioned}"."serde" = true; }
-      { "${deps.emseries."0.1.0".dimensioned}".default = true; }
+      { "${deps.emseries."0.2.0".dimensioned}"."serde" = true; }
+      { "${deps.emseries."0.2.0".dimensioned}".default = true; }
     ];
-    emseries."0.1.0".default = (f.emseries."0.1.0".default or true);
-    serde."${deps.emseries."0.1.0".serde}".default = true;
-    serde_derive."${deps.emseries."0.1.0".serde_derive}".default = true;
-    serde_json."${deps.emseries."0.1.0".serde_json}".default = true;
+    emseries."0.2.0".default = (f.emseries."0.2.0".default or true);
+    serde."${deps.emseries."0.2.0".serde}".default = true;
+    serde_derive."${deps.emseries."0.2.0".serde_derive}".default = true;
+    serde_json."${deps.emseries."0.2.0".serde_json}".default = true;
     uuid = fold recursiveUpdate {} [
-      { "${deps.emseries."0.1.0".uuid}"."serde" = true; }
-      { "${deps.emseries."0.1.0".uuid}"."v4" = true; }
-      { "${deps.emseries."0.1.0".uuid}".default = true; }
+      { "${deps.emseries."0.2.0".uuid}"."serde" = true; }
+      { "${deps.emseries."0.2.0".uuid}"."v4" = true; }
+      { "${deps.emseries."0.2.0".uuid}".default = true; }
     ];
-    yaml_rust."${deps.emseries."0.1.0".yaml_rust}".default = true;
+    yaml_rust."${deps.emseries."0.2.0".yaml_rust}".default = true;
   }) [
-    (cratesIO.features_.chrono."${deps."emseries"."0.1.0"."chrono"}" deps)
-    (cratesIO.features_.dimensioned."${deps."emseries"."0.1.0"."dimensioned"}" deps)
-    (cratesIO.features_.serde."${deps."emseries"."0.1.0"."serde"}" deps)
-    (cratesIO.features_.serde_derive."${deps."emseries"."0.1.0"."serde_derive"}" deps)
-    (cratesIO.features_.serde_json."${deps."emseries"."0.1.0"."serde_json"}" deps)
-    (cratesIO.features_.uuid."${deps."emseries"."0.1.0"."uuid"}" deps)
-    (cratesIO.features_.yaml_rust."${deps."emseries"."0.1.0"."yaml_rust"}" deps)
+    (cratesIO.features_.chrono."${deps."emseries"."0.2.0"."chrono"}" deps)
+    (cratesIO.features_.dimensioned."${deps."emseries"."0.2.0"."dimensioned"}" deps)
+    (cratesIO.features_.serde."${deps."emseries"."0.2.0"."serde"}" deps)
+    (cratesIO.features_.serde_derive."${deps."emseries"."0.2.0"."serde_derive"}" deps)
+    (cratesIO.features_.serde_json."${deps."emseries"."0.2.0"."serde_json"}" deps)
+    (cratesIO.features_.uuid."${deps."emseries"."0.2.0"."uuid"}" deps)
+    (cratesIO.features_.yaml_rust."${deps."emseries"."0.2.0"."yaml_rust"}" deps)
   ];
 
 
@@ -58,7 +58,7 @@ let cratesIO = callPackage ./crates-io.nix { };
 }; in
 
 rec {
-  emseries = crates.crates.emseries."0.1.0" deps;
+  emseries = crates.crates.emseries."0.2.0" deps;
   __all = [ (emseries {}) ];
   deps.bitflags."1.0.3" = {};
   deps.cfg_if."0.1.4" = {};
@@ -75,7 +75,7 @@ rec {
     typenum = "1.10.0";
   };
   deps.dtoa."0.4.3" = {};
-  deps.emseries."0.1.0" = {
+  deps.emseries."0.2.0" = {
     chrono = "0.4.4";
     dimensioned = "0.7.0";
     serde = "1.0.70";
