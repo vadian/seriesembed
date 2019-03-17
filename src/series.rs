@@ -57,7 +57,11 @@ where
             match line {
                 Ok(line_) => {
                     match parse_line(&line_) {
-                        Ok(record) => records.insert(record.id.clone(), record.clone()),
+                        Ok(record) => match record.data {
+                            Some(val) =>
+                                records.insert(record.id.clone(), Record{ id: record.id.clone(), data: val }),
+                            None => records.remove(&record.id.clone()),
+                        }
                         Err(err) => return Err(err),
                     };
                 }
@@ -91,6 +95,28 @@ where
         match write_res {
             Ok(_) => Ok(()),
             Err(err) => Err(err),
+        }
+    }
+
+    /// Delete a record from the database
+    ///
+    /// Future note: while this deletes a record from the view, it only adds an entry to the
+    /// database that indicates `data: null`. If record histories ever become important, the record
+    /// and its entire history (including this delete) will still be available.
+    pub fn delete(&mut self, uuid: &UniqueId) -> Result<(), Error> {
+        self.records.remove(uuid);
+
+        let rec: DeletableRecord<T> = DeletableRecord {
+            id: uuid.clone(),
+            data: None,
+        };
+        match serde_json::to_string(&rec) {
+            Ok(rec_str) => {
+                self.writer
+                    .write_fmt(format_args!("{}\n", rec_str.as_str()))
+                    .map_err(Error::IOError)
+            }
+            Err(err) => Err(Error::SerializationError(err)),
         }
     }
 
@@ -151,11 +177,21 @@ where
     */
 }
 
-fn parse_line<T>(line: &str) -> Result<Record<T>, Error>
+
+#[derive(Clone, Deserialize, Serialize)]
+struct DeletableRecord<T: Clone + Recordable> {
+    pub id: UniqueId,
+    pub data: Option<T>,
+}
+
+fn parse_line<T>(line: &str) -> Result<DeletableRecord<T>, Error>
 where
     T: Clone + Recordable + DeserializeOwned + Serialize,
 {
-    serde_json::from_str(&line).map_err(Error::DeserializationError)
+    serde_json::from_str(&line).map_err(|err| {
+        println!("deserialization error: {}", err);
+        Error::DeserializationError(err)
+    })
 }
 
 
@@ -516,6 +552,36 @@ mod tests {
     }
 
 
+    #[test]
+    pub fn can_delete_an_entry() {
+        let _series_remover = SeriesFileCleanup::new("var/record_deletes.json");
+        let trips = mk_trips();
+
+        {
+            let mut ts: Series<BikeTrip> = Series::open("var/record_deletes.json").expect(
+                "expect the time series to open correctly",
+            );
+            let trip_id = ts.put(trips[0].clone()).expect("expect a successful put");
+            ts.put(trips[1].clone()).expect("expect a successful put");
+            ts.put(trips[2].clone()).expect("expect a successful put");
+
+            ts.delete(&trip_id).expect("successful delete");
+
+            let recs = ts.all_records().expect("good record retrieval");
+            assert_eq!(recs.len(), 2);
+        }
+
+        {
+            let ts: Series<BikeTrip> = Series::open("var/record_deletes.json").expect(
+                "expect the time series to open correctly",
+            );
+            let recs = ts.all_records().expect("good record retrieval");
+            assert_eq!(recs.len(), 2);
+        }
+
+    }
+
+
     #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
     pub struct Weight(Kilogram<f64>);
 
@@ -539,23 +605,17 @@ mod tests {
         }
     }
 
-
-
     const WEIGHT_ENTRY: &str = "{\"data\":{\"weight\":77.79109,\"date\":\"2003-11-10T06:00:00.000000000000Z\"},\"id\":\"3330c5b0-783f-4919-b2c4-8169c38f65ff\"}";
 
     #[test]
     pub fn legacy_deserialization() {
-        let rec: Result<Record<WeightRecord>, Error> = parse_line(WEIGHT_ENTRY);
-        match rec {
-            Err(err) => assert!(false, err),
-            Ok(rec_) => {
-                assert_eq!(
-                    rec_.id,
-                    UniqueId::from_str("3330c5b0-783f-4919-b2c4-8169c38f65ff").unwrap()
-                );
-                assert_eq!(rec_.data.weight, Weight(77.79109 * KG));
-            }
-        }
+        let rec: DeletableRecord<WeightRecord> = parse_line(WEIGHT_ENTRY)
+            .expect("should successfully parse the record");
+        assert_eq!(
+            rec.id,
+            UniqueId::from_str("3330c5b0-783f-4919-b2c4-8169c38f65ff").unwrap()
+        );
+        assert_eq!(rec.data, Some(WeightRecord{ date: Utc.ymd(2003, 11, 10).and_hms(6, 0, 0), weight: Weight(77.79109 * KG)}));
     }
 
     #[test]
@@ -589,5 +649,4 @@ mod tests {
             "{\"date\":\"2003-11-10T06:00:00Z\",\"weight\":77.0}"
         );
     }
-
 }

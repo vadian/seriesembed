@@ -93,6 +93,11 @@ impl UniqueId {
             Error::UUIDParseError(err)
         })
     }
+
+    /// Convert to a hyphenated string
+    pub fn to_string(&self) -> String {
+        self.0.hyphenated().to_string()
+    }
 }
 
 /// Every record contains a unique ID and then the primary data, which itself must implementd the
