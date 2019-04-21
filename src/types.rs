@@ -68,9 +68,6 @@ pub trait Recordable {
 
     /// A list of string tags that can be used for indexing. This list defined per-type.
     fn tags(&self) -> Vec<String>;
-
-    /// [Deprecated] This was never put into use and is probably not at all useful.
-    fn values(&self) -> Vec<String>;
 }
 
 
@@ -127,8 +124,5 @@ where
     }
     fn tags(&self) -> Vec<String> {
         self.data.tags()
-    }
-    fn values(&self) -> Vec<String> {
-        self.data.values()
     }
 }

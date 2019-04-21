@@ -17,7 +17,7 @@ use types::{Error, Record, Recordable, UniqueId};
 ///
 /// Any given database can store only one data type, T. The data type must be determined when the
 /// database is opened.
-pub struct Series<T: Clone + Recordable + Serialize> {
+pub struct Series<T: Clone + Recordable + DeserializeOwned + Serialize> {
     //path: String,
     writer: LineWriter<File>,
     records: HashMap<UniqueId, Record<T>>,
@@ -228,9 +228,6 @@ mod tests {
             self.datetime
         }
         fn tags(&self) -> Vec<String> {
-            Vec::new()
-        }
-        fn values(&self) -> Vec<String> {
             Vec::new()
         }
     }
@@ -597,10 +594,6 @@ mod tests {
         }
 
         fn tags(&self) -> Vec<String> {
-            Vec::new()
-        }
-
-        fn values(&self) -> Vec<String> {
             Vec::new()
         }
     }

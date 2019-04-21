@@ -12,3 +12,4 @@ The project has so far only been outlined. Upcoming expected features:
 
 The actual extent of the features implemened will depend on how I and any others decide to use them.
 
+This library is already available for basic create/read/update/delete usage.

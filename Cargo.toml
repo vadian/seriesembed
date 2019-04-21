@@ -1,10 +1,10 @@
 [package]
 name = "emseries"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Savanni D'Gerinel <savanni@luminescent-dreams.com>"]
 description = "an Embedded Time Series database"
 license = "BSD-3-Clause"
-documentation = "https://github.com/luminescent-dreams/emseries"
+documentation = "https://docs.rs/emseries"
 homepage = "https://github.com/luminescent-dreams/emseries"
 repository = "https://github.com/luminescent-dreams/emseries"
 categories = ["database-implementations"]
