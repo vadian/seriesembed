@@ -51,11 +51,16 @@ Note: all of the data is read into memory at once. For human-scale things, this 
 
 #[macro_use]
 extern crate serde_derive;
+extern crate chrono;
+extern crate chrono_tz;
+extern crate serde;
 
 mod criteria;
+mod date_time_tz;
 mod series;
 mod types;
 
-pub use types::{Error, Record, Recordable, UniqueId};
-pub use series::Series;
+pub use date_time_tz::DateTimeTz;
 pub use criteria::*;
+pub use series::Series;
+pub use types::{Error, Record, Recordable, UniqueId};

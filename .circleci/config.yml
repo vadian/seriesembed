@@ -6,7 +6,7 @@ jobs:
     shell: /bin/bash --login
 
     docker:
-    - image: savannidgerinel/rust:latest
+    - image: rust:1.33
 
     steps:
     - checkout
@@ -18,7 +18,7 @@ jobs:
           # Default branch if not
           - dep-sol-
 
-    - run: cargo build
+    - run: /usr/local/cargo/bin/cargo build
 
     - save_cache:
         key: dep-{{ .Branch }}-{{ epoch }}
@@ -26,7 +26,7 @@ jobs:
         - ~/.cargo
 
     - run: mkdir var
-    - run: cargo test
+    - run: /usr/local/cargo/bin/cargo test
 
     - save_cache:
         key: dep-{{ .Branch }}-{{ epoch }}
@@ -50,5 +50,3 @@ workflows:
     jobs:
       - build-lfs
       - build-nix
-
-

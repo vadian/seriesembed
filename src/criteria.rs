@@ -1,6 +1,4 @@
-extern crate chrono;
-
-use self::chrono::{DateTime, Utc};
+use date_time_tz::DateTimeTz;
 use types::Recordable;
 
 /// This trait is used for constructing queries for searching the database.
@@ -39,7 +37,7 @@ pub struct Or<A: Criteria, B: Criteria> {
 /// Specify the starting time for a search. This consists of a UTC timestamp and a specifier as to
 /// whether the exact time is included in the search criteria.
 pub struct StartTime {
-    pub time: DateTime<Utc>,
+    pub time: DateTimeTz,
     pub incl: bool,
 }
 
@@ -58,7 +56,7 @@ impl Criteria for StartTime {
 /// Specify the ending time for a search. This consists of a UTC timestamp and a specifier as to
 /// whether the exact time is included in the search criteria.
 pub struct EndTime {
-    pub time: DateTime<Utc>,
+    pub time: DateTimeTz,
     pub incl: bool,
 }
 
@@ -93,9 +91,12 @@ impl Criteria for Tags {
 
 
 /// Specify a criteria that searches for records matching an exact time.
-pub fn exact_time(time: DateTime<Utc>) -> And<StartTime, EndTime> {
+pub fn exact_time(time: DateTimeTz) -> And<StartTime, EndTime> {
     And {
-        lside: StartTime { time, incl: true },
+        lside: StartTime {
+            time: time.clone(),
+            incl: true,
+        },
         rside: EndTime { time, incl: true },
     }
 }
@@ -103,9 +104,9 @@ pub fn exact_time(time: DateTime<Utc>) -> And<StartTime, EndTime> {
 
 /// Specify a criteria that searches for all records within a time range.
 pub fn time_range(
-    start: DateTime<Utc>,
+    start: DateTimeTz,
     start_incl: bool,
-    end: DateTime<Utc>,
+    end: DateTimeTz,
     end_incl: bool,
 ) -> And<StartTime, EndTime> {
     And {

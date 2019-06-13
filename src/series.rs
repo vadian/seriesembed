@@ -11,7 +11,7 @@ use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader, LineWriter, Write};
 
 use criteria::Criteria;
-use types::{Error, Record, Recordable, UniqueId};
+use types::{Error, Record, Recordable, DeletableRecord, UniqueId, parse_line};
 
 /// An open time series database.
 ///
@@ -57,10 +57,19 @@ where
             match line {
                 Ok(line_) => {
                     match parse_line(&line_) {
-                        Ok(record) => match record.data {
-                            Some(val) =>
-                                records.insert(record.id.clone(), Record{ id: record.id.clone(), data: val }),
-                            None => records.remove(&record.id.clone()),
+                        Ok(record) => {
+                            match record.data {
+                                Some(val) => {
+                                    records.insert(
+                                        record.id.clone(),
+                                        Record {
+                                            id: record.id.clone(),
+                                            data: val,
+                                        },
+                                    )
+                                }
+                                None => records.remove(&record.id.clone()),
+                            }
                         }
                         Err(err) => return Err(err),
                     };
@@ -89,7 +98,7 @@ where
                     .write_fmt(format_args!("{}\n", rec_str.as_str()))
                     .map_err(Error::IOError)
             }
-            Err(err) => Err(Error::SerializationError(err)),
+            Err(err) => Err(Error::JSONStringError(err)),
         };
 
         match write_res {
@@ -116,7 +125,7 @@ where
                     .write_fmt(format_args!("{}\n", rec_str.as_str()))
                     .map_err(Error::IOError)
             }
-            Err(err) => Err(Error::SerializationError(err)),
+            Err(err) => Err(Error::JSONStringError(err)),
         }
     }
 
@@ -178,32 +187,17 @@ where
 }
 
 
-#[derive(Clone, Deserialize, Serialize)]
-struct DeletableRecord<T: Clone + Recordable> {
-    pub id: UniqueId,
-    pub data: Option<T>,
-}
-
-fn parse_line<T>(line: &str) -> Result<DeletableRecord<T>, Error>
-where
-    T: Clone + Recordable + DeserializeOwned + Serialize,
-{
-    serde_json::from_str(&line).map_err(|err| {
-        println!("deserialization error: {}", err);
-        Error::DeserializationError(err)
-    })
-}
-
-
 #[cfg(test)]
 mod tests {
     extern crate chrono;
     extern crate dimensioned;
 
+    use chrono_tz::Etc::UTC;
     use self::chrono::prelude::*;
     use self::dimensioned::si::{M, Meter, S, Second, KG, Kilogram};
     use std::fs;
     use std::ops;
+    use date_time_tz::DateTimeTz;
 
     use super::*;
     use criteria::*;
@@ -217,15 +211,15 @@ mod tests {
 
     #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
     struct BikeTrip {
-        datetime: DateTime<Utc>,
+        datetime: DateTimeTz,
         distance: Distance,
         duration: Duration,
         comments: String,
     }
 
     impl Recordable for BikeTrip {
-        fn timestamp(&self) -> DateTime<Utc> {
-            self.datetime
+        fn timestamp(&self) -> DateTimeTz {
+            self.datetime.clone()
         }
         fn tags(&self) -> Vec<String> {
             Vec::new()
@@ -249,31 +243,31 @@ mod tests {
     fn mk_trips() -> [BikeTrip; 5] {
         [
             BikeTrip {
-                datetime: Utc.ymd(2011, 10, 29).and_hms(0, 0, 0),
+                datetime: DateTimeTz(UTC.ymd(2011, 10, 29).and_hms(0, 0, 0)),
                 distance: Distance(58741.055 * M),
                 duration: Duration(11040.0 * S),
                 comments: String::from("long time ago"),
             },
             BikeTrip {
-                datetime: Utc.ymd(2011, 10, 31).and_hms(0, 0, 0),
+                datetime: DateTimeTz(UTC.ymd(2011, 10, 31).and_hms(0, 0, 0)),
                 distance: Distance(17702.0 * M),
                 duration: Duration(2880.0 * S),
                 comments: String::from("day 2"),
             },
             BikeTrip {
-                datetime: Utc.ymd(2011, 11, 02).and_hms(0, 0, 0),
+                datetime: DateTimeTz(UTC.ymd(2011, 11, 02).and_hms(0, 0, 0)),
                 distance: Distance(41842.945 * M),
                 duration: Duration(7020.0 * S),
                 comments: String::from("Do Some Distance!"),
             },
             BikeTrip {
-                datetime: Utc.ymd(2011, 11, 04).and_hms(0, 0, 0),
+                datetime: DateTimeTz(UTC.ymd(2011, 11, 04).and_hms(0, 0, 0)),
                 distance: Distance(34600.895 * M),
                 duration: Duration(5580.0 * S),
                 comments: String::from("I did a lot of distance back then"),
             },
             BikeTrip {
-                datetime: Utc.ymd(2011, 11, 05).and_hms(0, 0, 0),
+                datetime: DateTimeTz(UTC.ymd(2011, 11, 05).and_hms(0, 0, 0)),
                 distance: Distance(6437.376 * M),
                 duration: Duration(960.0 * S),
                 comments: String::from("day 5"),
@@ -300,7 +294,10 @@ mod tests {
             Ok(None) => assert!(false, "There should have been a value here"),
             Ok(Some(tr)) => {
                 assert_eq!(tr.id, uuid);
-                assert_eq!(tr.timestamp(), Utc.ymd(2011, 10, 29).and_hms(0, 0, 0));
+                assert_eq!(
+                    tr.timestamp(),
+                    DateTimeTz(UTC.ymd(2011, 10, 29).and_hms(0, 0, 0))
+                );
                 assert_eq!(tr.data.duration, Duration(11040.0 * S));
                 assert_eq!(tr.data.comments, String::from("long time ago"));
                 assert_eq!(tr.data, trips[0]);
@@ -323,7 +320,9 @@ mod tests {
         ts.put(trips[3].clone()).expect("expect a successful put");
         ts.put(trips[4].clone()).expect("expect a successful put");
 
-        match ts.search(exact_time(Utc.ymd(2011, 10, 31).and_hms(0, 0, 0))) {
+        match ts.search(exact_time(
+            DateTimeTz(UTC.ymd(2011, 10, 31).and_hms(0, 0, 0)),
+        )) {
             Err(err) => assert!(false, err),
             Ok(v) => {
                 assert_eq!(v.len(), 1);
@@ -347,9 +346,9 @@ mod tests {
 
         match ts.search_sorted(
             time_range(
-                Utc.ymd(2011, 10, 31).and_hms(0, 0, 0),
+                DateTimeTz(UTC.ymd(2011, 10, 31).and_hms(0, 0, 0)),
                 true,
-                Utc.ymd(2011, 11, 04).and_hms(0, 0, 0),
+                DateTimeTz(UTC.ymd(2011, 11, 04).and_hms(0, 0, 0)),
                 true,
             ),
             |l, r| l.timestamp().cmp(&r.timestamp()),
@@ -386,9 +385,9 @@ mod tests {
                 .expect("expect the time series to open correctly");
             match ts.search_sorted(
                 time_range(
-                    Utc.ymd(2011, 10, 31).and_hms(0, 0, 0),
+                    DateTimeTz(UTC.ymd(2011, 10, 31).and_hms(0, 0, 0)),
                     true,
-                    Utc.ymd(2011, 11, 04).and_hms(0, 0, 0),
+                    DateTimeTz(UTC.ymd(2011, 11, 04).and_hms(0, 0, 0)),
                     true,
                 ),
                 |l, r| l.timestamp().cmp(&r.timestamp()),
@@ -424,9 +423,9 @@ mod tests {
                 .expect("expect the time series to open correctly");
             match ts.search_sorted(
                 time_range(
-                    Utc.ymd(2011, 10, 31).and_hms(0, 0, 0),
+                    DateTimeTz(UTC.ymd(2011, 10, 31).and_hms(0, 0, 0)),
                     true,
-                    Utc.ymd(2011, 11, 04).and_hms(0, 0, 0),
+                    DateTimeTz(UTC.ymd(2011, 11, 04).and_hms(0, 0, 0)),
                     true,
                 ),
                 |l, r| l.timestamp().cmp(&r.timestamp()),
@@ -448,9 +447,9 @@ mod tests {
             );
             match ts.search_sorted(
                 time_range(
-                    Utc.ymd(2011, 10, 31).and_hms(0, 0, 0),
+                    DateTimeTz(UTC.ymd(2011, 10, 31).and_hms(0, 0, 0)),
                     true,
-                    Utc.ymd(2011, 11, 05).and_hms(0, 0, 0),
+                    DateTimeTz(UTC.ymd(2011, 11, 05).and_hms(0, 0, 0)),
                     true,
                 ),
                 |l, r| l.timestamp().cmp(&r.timestamp()),
@@ -492,7 +491,10 @@ mod tests {
             Err(err) => assert!(false, err),
             Ok(None) => assert!(false, "record not found"),
             Ok(Some(trip)) => {
-                assert_eq!(trip.data.datetime, Utc.ymd(2011, 11, 02).and_hms(0, 0, 0));
+                assert_eq!(
+                    trip.data.datetime,
+                    DateTimeTz(UTC.ymd(2011, 11, 02).and_hms(0, 0, 0))
+                );
                 assert_eq!(trip.data.distance, Distance(50000.0 * M));
                 assert_eq!(trip.data.duration, Duration(7020.0 * S));
                 assert_eq!(trip.data.comments, String::from("Do Some Distance!"));
@@ -532,13 +534,15 @@ mod tests {
                 Ok(trips) => assert_eq!(trips.len(), 3),
             }
 
-            match ts.search(exact_time(Utc.ymd(2011, 11, 02).and_hms(0, 0, 0))) {
+            match ts.search(exact_time(
+                DateTimeTz(UTC.ymd(2011, 11, 02).and_hms(0, 0, 0)),
+            )) {
                 Err(err) => assert!(false, err),
                 Ok(trips) => {
                     assert_eq!(trips.len(), 1);
                     assert_eq!(
                         trips[0].data.datetime,
-                        Utc.ymd(2011, 11, 02).and_hms(0, 0, 0)
+                        DateTimeTz(UTC.ymd(2011, 11, 02).and_hms(0, 0, 0))
                     );
                     assert_eq!(trips[0].data.distance, Distance(50000.0 * M));
                     assert_eq!(trips[0].data.duration, Duration(7020.0 * S));
@@ -578,19 +582,18 @@ mod tests {
 
     }
 
-
     #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
     pub struct Weight(Kilogram<f64>);
 
     #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
     pub struct WeightRecord {
-        pub date: DateTime<Utc>,
+        pub date: DateTimeTz,
         pub weight: Weight,
     }
 
     impl Recordable for WeightRecord {
-        fn timestamp(&self) -> DateTime<Utc> {
-            self.date
+        fn timestamp(&self) -> DateTimeTz {
+            self.date.clone()
         }
 
         fn tags(&self) -> Vec<String> {
@@ -598,27 +601,10 @@ mod tests {
         }
     }
 
-    const WEIGHT_ENTRY: &str = "{\"data\":{\"weight\":77.79109,\"date\":\"2003-11-10T06:00:00.000000000000Z\"},\"id\":\"3330c5b0-783f-4919-b2c4-8169c38f65ff\"}";
-
-    #[test]
-    pub fn legacy_deserialization() {
-        let rec: DeletableRecord<WeightRecord> = parse_line(WEIGHT_ENTRY)
-            .expect("should successfully parse the record");
-        assert_eq!(
-            rec.id,
-            UniqueId::from_str("3330c5b0-783f-4919-b2c4-8169c38f65ff").unwrap()
-        );
-        assert_eq!(rec.data, Some(WeightRecord{ date: Utc.ymd(2003, 11, 10).and_hms(6, 0, 0), weight: Weight(77.79109 * KG)}));
-    }
-
     #[test]
     pub fn legacy_file_load() {
         let ts: Series<WeightRecord> =
             Series::open("fixtures/weight.json").expect("legacy series should open correctly");
-
-        for record in ts.all_records().expect("all_records should never fail") {
-            println!("[Record] {:?}", record);
-        }
 
         let uid = UniqueId::from_str("3330c5b0-783f-4919-b2c4-8169c38f65ff")
             .expect("something is wrong with this ID");
@@ -630,16 +616,4 @@ mod tests {
         }
     }
 
-    #[test]
-    pub fn serialization_output() {
-        let date = Utc.ymd(2003, 11, 10).and_hms(6, 0, 0);
-        let rec = WeightRecord {
-            date,
-            weight: Weight(77.0 * KG),
-        };
-        assert_eq!(
-            serde_json::to_string(&rec).unwrap(),
-            "{\"date\":\"2003-11-10T06:00:00Z\",\"weight\":77.0}"
-        );
-    }
 }

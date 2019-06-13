@@ -1,6 +1,6 @@
 [package]
 name = "emseries"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Savanni D'Gerinel <savanni@luminescent-dreams.com>"]
 description = "an Embedded Time Series database"
 license = "BSD-3-Clause"
@@ -17,6 +17,7 @@ include = [
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = { version = "0.4", features = ["serde"] }
 dimensioned = { version = "0.7.0", features = ["serde"] }
 serde = "1"
 serde_derive = "1"

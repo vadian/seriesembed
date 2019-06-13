@@ -5,6 +5,29 @@ let inherit (lib.lists) fold;
 in
 rec {
 
+# aho-corasick-0.6.10
+
+  crates.aho_corasick."0.6.10" = deps: { features?(features_.aho_corasick."0.6.10" deps {}) }: buildRustCrate {
+    crateName = "aho-corasick";
+    version = "0.6.10";
+    authors = [ "Andrew Gallant <jamslam@gmail.com>" ];
+    sha256 = "0bhasxfpmfmz1460chwsx59vdld05axvmk1nbp3sd48xav3d108p";
+    libName = "aho_corasick";
+    crateBin =
+      [{  name = "aho-corasick-dot";  path = "src/main.rs"; }];
+    dependencies = mapFeatures features ([
+      (crates."memchr"."${deps."aho_corasick"."0.6.10"."memchr"}" deps)
+    ]);
+  };
+  features_.aho_corasick."0.6.10" = deps: f: updateFeatures f (rec {
+    aho_corasick."0.6.10".default = (f.aho_corasick."0.6.10".default or true);
+    memchr."${deps.aho_corasick."0.6.10".memchr}".default = true;
+  }) [
+    (features_.memchr."${deps."aho_corasick"."0.6.10"."memchr"}" deps)
+  ];
+
+
+# end
 # bitflags-1.0.3
 
   crates.bitflags."1.0.3" = deps: { features?(features_.bitflags."1.0.3" deps {}) }: buildRustCrate {
@@ -70,6 +93,37 @@ rec {
     (features_.num_traits."${deps."chrono"."0.4.4"."num_traits"}" deps)
     (features_.serde."${deps."chrono"."0.4.4"."serde"}" deps)
     (features_.time."${deps."chrono"."0.4.4"."time"}" deps)
+  ];
+
+
+# end
+# chrono-tz-0.4.1
+
+  crates.chrono_tz."0.4.1" = deps: { features?(features_.chrono_tz."0.4.1" deps {}) }: buildRustCrate {
+    crateName = "chrono-tz";
+    version = "0.4.1";
+    authors = [ "Djzin" ];
+    sha256 = "02nb3n9pq361hx7b4qlr6yisgaaan54wca478yfyisyz1x5vm8n9";
+    build = "build.rs";
+    dependencies = mapFeatures features ([
+      (crates."chrono"."${deps."chrono_tz"."0.4.1"."chrono"}" deps)
+    ]
+      ++ (if features.chrono_tz."0.4.1".serde or false then [ (crates.serde."${deps."chrono_tz"."0.4.1".serde}" deps) ] else []));
+
+    buildDependencies = mapFeatures features ([
+      (crates."parse_zoneinfo"."${deps."chrono_tz"."0.4.1"."parse_zoneinfo"}" deps)
+    ]);
+    features = mkFeatures (features."chrono_tz"."0.4.1" or {});
+  };
+  features_.chrono_tz."0.4.1" = deps: f: updateFeatures f (rec {
+    chrono."${deps.chrono_tz."0.4.1".chrono}".default = true;
+    chrono_tz."0.4.1".default = (f.chrono_tz."0.4.1".default or true);
+    parse_zoneinfo."${deps.chrono_tz."0.4.1".parse_zoneinfo}".default = true;
+    serde."${deps.chrono_tz."0.4.1".serde}".default = true;
+  }) [
+    (features_.chrono."${deps."chrono_tz"."0.4.1"."chrono"}" deps)
+    (features_.serde."${deps."chrono_tz"."0.4.1"."serde"}" deps)
+    (features_.parse_zoneinfo."${deps."chrono_tz"."0.4.1"."parse_zoneinfo"}" deps)
   ];
 
 
@@ -228,6 +282,29 @@ rec {
 
 
 # end
+# lazy_static-1.3.0
+
+  crates.lazy_static."1.3.0" = deps: { features?(features_.lazy_static."1.3.0" deps {}) }: buildRustCrate {
+    crateName = "lazy_static";
+    version = "1.3.0";
+    authors = [ "Marvin Löbel <loebel.marvin@gmail.com>" ];
+    sha256 = "1vv47va18ydk7dx5paz88g3jy1d3lwbx6qpxkbj8gyfv770i4b1y";
+    dependencies = mapFeatures features ([
+]);
+    features = mkFeatures (features."lazy_static"."1.3.0" or {});
+  };
+  features_.lazy_static."1.3.0" = deps: f: updateFeatures f (rec {
+    lazy_static = fold recursiveUpdate {} [
+      { "1.3.0".default = (f.lazy_static."1.3.0".default or true); }
+      { "1.3.0".spin =
+        (f.lazy_static."1.3.0".spin or false) ||
+        (f.lazy_static."1.3.0".spin_no_std or false) ||
+        (lazy_static."1.3.0"."spin_no_std" or false); }
+    ];
+  }) [];
+
+
+# end
 # libc-0.2.42
 
   crates.libc."0.2.42" = deps: { features?(features_.libc."0.2.42" deps {}) }: buildRustCrate {
@@ -275,6 +352,29 @@ rec {
         (f.linked_hash_map."0.5.1".serde_test or false) ||
         (f.linked_hash_map."0.5.1".serde_impl or false) ||
         (linked_hash_map."0.5.1"."serde_impl" or false); }
+    ];
+  }) [];
+
+
+# end
+# memchr-2.2.0
+
+  crates.memchr."2.2.0" = deps: { features?(features_.memchr."2.2.0" deps {}) }: buildRustCrate {
+    crateName = "memchr";
+    version = "2.2.0";
+    authors = [ "Andrew Gallant <jamslam@gmail.com>" "bluss" ];
+    sha256 = "11vwg8iig9jyjxq3n1cq15g29ikzw5l7ar87md54k1aisjs0997p";
+    dependencies = mapFeatures features ([
+]);
+    features = mkFeatures (features."memchr"."2.2.0" or {});
+  };
+  features_.memchr."2.2.0" = deps: f: updateFeatures f (rec {
+    memchr = fold recursiveUpdate {} [
+      { "2.2.0".default = (f.memchr."2.2.0".default or true); }
+      { "2.2.0".use_std =
+        (f.memchr."2.2.0".use_std or false) ||
+        (f.memchr."2.2.0".default or false) ||
+        (memchr."2.2.0"."default" or false); }
     ];
   }) [];
 
@@ -337,6 +437,26 @@ rec {
         (num_traits."0.2.5"."default" or false); }
     ];
   }) [];
+
+
+# end
+# parse-zoneinfo-0.1.1
+
+  crates.parse_zoneinfo."0.1.1" = deps: { features?(features_.parse_zoneinfo."0.1.1" deps {}) }: buildRustCrate {
+    crateName = "parse-zoneinfo";
+    version = "0.1.1";
+    authors = [ "Djzin <djzin@users.noreply.github.com>" ];
+    sha256 = "1dgbkwac4m3xl816ld5snzn26f2pl20psdfm9522b69ks9bi8qnr";
+    dependencies = mapFeatures features ([
+      (crates."regex"."${deps."parse_zoneinfo"."0.1.1"."regex"}" deps)
+    ]);
+  };
+  features_.parse_zoneinfo."0.1.1" = deps: f: updateFeatures f (rec {
+    parse_zoneinfo."0.1.1".default = (f.parse_zoneinfo."0.1.1".default or true);
+    regex."${deps.parse_zoneinfo."0.1.1".regex}".default = true;
+  }) [
+    (features_.regex."${deps."parse_zoneinfo"."0.1.1"."regex"}" deps)
+  ];
 
 
 # end
@@ -466,6 +586,65 @@ rec {
   features_.redox_syscall."0.1.40" = deps: f: updateFeatures f (rec {
     redox_syscall."0.1.40".default = (f.redox_syscall."0.1.40".default or true);
   }) [];
+
+
+# end
+# regex-0.2.11
+
+  crates.regex."0.2.11" = deps: { features?(features_.regex."0.2.11" deps {}) }: buildRustCrate {
+    crateName = "regex";
+    version = "0.2.11";
+    authors = [ "The Rust Project Developers" ];
+    sha256 = "0r50cymxdqp0fv1dxd22mjr6y32q450nwacd279p9s7lh0cafijj";
+    dependencies = mapFeatures features ([
+      (crates."aho_corasick"."${deps."regex"."0.2.11"."aho_corasick"}" deps)
+      (crates."memchr"."${deps."regex"."0.2.11"."memchr"}" deps)
+      (crates."regex_syntax"."${deps."regex"."0.2.11"."regex_syntax"}" deps)
+      (crates."thread_local"."${deps."regex"."0.2.11"."thread_local"}" deps)
+      (crates."utf8_ranges"."${deps."regex"."0.2.11"."utf8_ranges"}" deps)
+    ]);
+    features = mkFeatures (features."regex"."0.2.11" or {});
+  };
+  features_.regex."0.2.11" = deps: f: updateFeatures f (rec {
+    aho_corasick."${deps.regex."0.2.11".aho_corasick}".default = true;
+    memchr."${deps.regex."0.2.11".memchr}".default = true;
+    regex = fold recursiveUpdate {} [
+      { "0.2.11".default = (f.regex."0.2.11".default or true); }
+      { "0.2.11".pattern =
+        (f.regex."0.2.11".pattern or false) ||
+        (f.regex."0.2.11".unstable or false) ||
+        (regex."0.2.11"."unstable" or false); }
+    ];
+    regex_syntax."${deps.regex."0.2.11".regex_syntax}".default = true;
+    thread_local."${deps.regex."0.2.11".thread_local}".default = true;
+    utf8_ranges."${deps.regex."0.2.11".utf8_ranges}".default = true;
+  }) [
+    (features_.aho_corasick."${deps."regex"."0.2.11"."aho_corasick"}" deps)
+    (features_.memchr."${deps."regex"."0.2.11"."memchr"}" deps)
+    (features_.regex_syntax."${deps."regex"."0.2.11"."regex_syntax"}" deps)
+    (features_.thread_local."${deps."regex"."0.2.11"."thread_local"}" deps)
+    (features_.utf8_ranges."${deps."regex"."0.2.11"."utf8_ranges"}" deps)
+  ];
+
+
+# end
+# regex-syntax-0.5.6
+
+  crates.regex_syntax."0.5.6" = deps: { features?(features_.regex_syntax."0.5.6" deps {}) }: buildRustCrate {
+    crateName = "regex-syntax";
+    version = "0.5.6";
+    authors = [ "The Rust Project Developers" ];
+    sha256 = "10vf3r34bgjnbrnqd5aszn35bjvm8insw498l1vjy8zx5yms3427";
+    dependencies = mapFeatures features ([
+      (crates."ucd_util"."${deps."regex_syntax"."0.5.6"."ucd_util"}" deps)
+    ]);
+  };
+  features_.regex_syntax."0.5.6" = deps: f: updateFeatures f (rec {
+    regex_syntax."0.5.6".default = (f.regex_syntax."0.5.6".default or true);
+    ucd_util."${deps.regex_syntax."0.5.6".ucd_util}".default = true;
+  }) [
+    (features_.ucd_util."${deps."regex_syntax"."0.5.6"."ucd_util"}" deps)
+  ];
 
 
 # end
@@ -630,6 +809,26 @@ rec {
 
 
 # end
+# thread_local-0.3.6
+
+  crates.thread_local."0.3.6" = deps: { features?(features_.thread_local."0.3.6" deps {}) }: buildRustCrate {
+    crateName = "thread_local";
+    version = "0.3.6";
+    authors = [ "Amanieu d'Antras <amanieu@gmail.com>" ];
+    sha256 = "02rksdwjmz2pw9bmgbb4c0bgkbq5z6nvg510sq1s6y2j1gam0c7i";
+    dependencies = mapFeatures features ([
+      (crates."lazy_static"."${deps."thread_local"."0.3.6"."lazy_static"}" deps)
+    ]);
+  };
+  features_.thread_local."0.3.6" = deps: f: updateFeatures f (rec {
+    lazy_static."${deps.thread_local."0.3.6".lazy_static}".default = true;
+    thread_local."0.3.6".default = (f.thread_local."0.3.6".default or true);
+  }) [
+    (features_.lazy_static."${deps."thread_local"."0.3.6"."lazy_static"}" deps)
+  ];
+
+
+# end
 # time-0.1.40
 
   crates.time."0.1.40" = deps: { features?(features_.time."0.1.40" deps {}) }: buildRustCrate {
@@ -685,6 +884,20 @@ rec {
 
 
 # end
+# ucd-util-0.1.3
+
+  crates.ucd_util."0.1.3" = deps: { features?(features_.ucd_util."0.1.3" deps {}) }: buildRustCrate {
+    crateName = "ucd-util";
+    version = "0.1.3";
+    authors = [ "Andrew Gallant <jamslam@gmail.com>" ];
+    sha256 = "1n1qi3jywq5syq90z9qd8qzbn58pcjgv1sx4sdmipm4jf9zanz15";
+  };
+  features_.ucd_util."0.1.3" = deps: f: updateFeatures f (rec {
+    ucd_util."0.1.3".default = (f.ucd_util."0.1.3".default or true);
+  }) [];
+
+
+# end
 # unicode-xid-0.1.0
 
   crates.unicode_xid."0.1.0" = deps: { features?(features_.unicode_xid."0.1.0" deps {}) }: buildRustCrate {
@@ -696,6 +909,20 @@ rec {
   };
   features_.unicode_xid."0.1.0" = deps: f: updateFeatures f (rec {
     unicode_xid."0.1.0".default = (f.unicode_xid."0.1.0".default or true);
+  }) [];
+
+
+# end
+# utf8-ranges-1.0.2
+
+  crates.utf8_ranges."1.0.2" = deps: { features?(features_.utf8_ranges."1.0.2" deps {}) }: buildRustCrate {
+    crateName = "utf8-ranges";
+    version = "1.0.2";
+    authors = [ "Andrew Gallant <jamslam@gmail.com>" ];
+    sha256 = "1my02laqsgnd8ib4dvjgd4rilprqjad6pb9jj9vi67csi5qs2281";
+  };
+  features_.utf8_ranges."1.0.2" = deps: f: updateFeatures f (rec {
+    utf8_ranges."1.0.2".default = (f.utf8_ranges."1.0.2".default or true);
   }) [];
 
 
