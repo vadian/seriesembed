@@ -11,7 +11,7 @@ use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader, LineWriter, Write};
 
 use criteria::Criteria;
-use types::{Error, Record, Recordable, DeletableRecord, UniqueId, parse_line};
+use types::{Error, Record, Recordable, DeletableRecord, UniqueId};
 
 /// An open time series database.
 ///
@@ -56,7 +56,7 @@ where
         for line in reader.lines() {
             match line {
                 Ok(line_) => {
-                    match parse_line(&line_) {
+                    match line_.parse::<DeletableRecord<_>>() {
                         Ok(record) => {
                             match record.data {
                                 Some(val) => {
@@ -624,7 +624,7 @@ mod tests {
         let ts: Series<WeightRecord> =
             Series::open("fixtures/weight.json").expect("legacy series should open correctly");
 
-        let uid = UniqueId::from_str("3330c5b0-783f-4919-b2c4-8169c38f65ff")
+        let uid = "3330c5b0-783f-4919-b2c4-8169c38f65ff".parse()
             .expect("something is wrong with this ID");
         let rec = ts.get(&uid);
         match rec {

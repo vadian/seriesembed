@@ -9,6 +9,7 @@ use self::uuid::Uuid;
 use std::error;
 use std::fmt;
 use std::io;
+use std::str;
 use date_time_tz::DateTimeTz;
 
 
@@ -85,17 +86,23 @@ impl UniqueId {
         let id = Uuid::new_v4();
         UniqueId(id)
     }
+}
 
-    /// Parse a UUID from a string. Raise UUIDParseError if the parsing fails.
-    pub fn from_str(val: &str) -> Result<UniqueId, Error> {
+impl str::FromStr for UniqueId {
+    type Err = Error;
+
+    /// Parse a UniqueId from a string. Raise UUIDParseError if the parsing fails.
+    fn from_str(val: &str) -> Result<Self, Self::Err> {
         Uuid::parse_str(val).map(UniqueId).map_err(|err| {
             Error::UUIDParseError(err)
         })
     }
+}
 
+impl fmt::Display for UniqueId {
     /// Convert to a hyphenated string
-    pub fn to_string(&self) -> String {
-        self.0.hyphenated().to_string()
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "{}", self.0.hyphenated().to_string())
     }
 }
 
@@ -136,14 +143,18 @@ pub struct DeletableRecord<T: Clone + Recordable> {
     pub data: Option<T>,
 }
 
-pub fn parse_line<T>(line: &str) -> Result<DeletableRecord<T>, Error>
+impl<T> str::FromStr for DeletableRecord<T>
 where
     T: Clone + Recordable + DeserializeOwned + Serialize,
 {
-    serde_json::from_str(&line).map_err(|err| {
-        println!("deserialization error: {}", err);
-        Error::JSONParseError(err)
-    })
+    type Err = Error;
+
+    fn from_str(line: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str(&line).map_err(|err| {
+            println!("deserialization error: {}", err);
+            Error::JSONParseError(err)
+        })
+    }
 }
 
 
@@ -153,7 +164,7 @@ mod test {
     extern crate serde_json;
 
     use self::dimensioned::si::{Kilogram, KG};
-    use super::{DeletableRecord, Recordable, UniqueId, parse_line};
+    use super::{DeletableRecord, Recordable};
     use date_time_tz::DateTimeTz;
     use chrono::TimeZone;
     use chrono_tz::Etc::UTC;
@@ -183,10 +194,10 @@ mod test {
     #[test]
     pub fn legacy_deserialization() {
         let rec: DeletableRecord<WeightRecord> =
-            parse_line(WEIGHT_ENTRY).expect("should successfully parse the record");
+            WEIGHT_ENTRY.parse().expect("should successfully parse the record");
         assert_eq!(
             rec.id,
-            UniqueId::from_str("3330c5b0-783f-4919-b2c4-8169c38f65ff").unwrap()
+            "3330c5b0-783f-4919-b2c4-8169c38f65ff".parse().unwrap()
         );
         assert_eq!(
             rec.data,
