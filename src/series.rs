@@ -24,7 +24,7 @@ pub struct Series<T: Clone + Recordable + DeserializeOwned + Serialize> {
 }
 
 
-impl<'de, T> Series<T>
+impl<T> Series<T>
 where
     T: Clone + Recordable + DeserializeOwned + Serialize,
 {
@@ -136,8 +136,7 @@ where
     }
 
     pub fn records<'s>(&'s self) -> Result<impl Iterator<Item = &'s Record<T>> + 's, Error> {
-        let results = self.records.iter().map(|tr| tr.1);
-        Ok(results)
+        Ok(self.records.values())
     }
 
     /*  The point of having Search is so that a lot of internal optimizations can happen once the
@@ -281,10 +280,9 @@ mod tests {
         let uuid = ts.put(trips[0].clone()).expect("expect a successful put");
         let record_res = ts.get(&uuid);
 
-        ts.put(trips[1].clone()).expect("expect a successful put");
-        ts.put(trips[2].clone()).expect("expect a successful put");
-        ts.put(trips[3].clone()).expect("expect a successful put");
-        ts.put(trips[4].clone()).expect("expect a successful put");
+        for trip in &trips[1..=4] {
+            ts.put(trip.clone()).expect("expect a successful put");
+        }
 
         match record_res {
             Err(err) => assert!(false, err),
@@ -309,11 +307,9 @@ mod tests {
         let mut ts: Series<BikeTrip> = Series::open("var/can_retrieve_entries_iterator.json")
             .expect("expect the time series to open correctly");
 
-        ts.put(trips[0].clone()).expect("expect a successful put");
-        ts.put(trips[1].clone()).expect("expect a successful put");
-        ts.put(trips[2].clone()).expect("expect a successful put");
-        ts.put(trips[3].clone()).expect("expect a successful put");
-        ts.put(trips[4].clone()).expect("expect a successful put");
+        for trip in &trips[0..=4] {
+            ts.put(trip.clone()).expect("expect a successful put");
+        }
 
         let as_vec = ts.all_records().expect("retrieval is currently infallible");
         let as_iter = ts.records().expect("retrieval is currently infallible");
@@ -332,11 +328,10 @@ mod tests {
         let mut ts: Series<BikeTrip> = Series::open(
             "var/can_search_for_an_entry_with_exact_time.json",
         ).expect("expect the time series to open correctly");
-        ts.put(trips[0].clone()).expect("expect a successful put");
-        ts.put(trips[1].clone()).expect("expect a successful put");
-        ts.put(trips[2].clone()).expect("expect a successful put");
-        ts.put(trips[3].clone()).expect("expect a successful put");
-        ts.put(trips[4].clone()).expect("expect a successful put");
+
+        for trip in &trips[0..=4] {
+            ts.put(trip.clone()).expect("expect a successful put");
+        }
 
         match ts.search(exact_time(
             DateTimeTz(UTC.ymd(2011, 10, 31).and_hms(0, 0, 0)),
@@ -356,11 +351,10 @@ mod tests {
         let trips = mk_trips();
         let mut ts: Series<BikeTrip> = Series::open("var/can_get_entries_in_time_range.json")
             .expect("expect the time series to open correctly");
-        ts.put(trips[0].clone()).expect("expect a successful put");
-        ts.put(trips[1].clone()).expect("expect a successful put");
-        ts.put(trips[2].clone()).expect("expect a successful put");
-        ts.put(trips[3].clone()).expect("expect a successful put");
-        ts.put(trips[4].clone()).expect("expect a successful put");
+
+        for trip in &trips[0..=4] {
+            ts.put(trip.clone()).expect("expect a successful put");
+        }
 
         match ts.search_sorted(
             time_range(
@@ -391,11 +385,9 @@ mod tests {
             let mut ts: Series<BikeTrip> = Series::open("var/persists_and_reads_an_entry.json")
                 .expect("expect the time series to open correctly");
 
-            ts.put(trips[0].clone()).expect("expect a successful put");
-            ts.put(trips[1].clone()).expect("expect a successful put");
-            ts.put(trips[2].clone()).expect("expect a successful put");
-            ts.put(trips[3].clone()).expect("expect a successful put");
-            ts.put(trips[4].clone()).expect("expect a successful put");
+            for trip in &trips[0..=4] {
+                ts.put(trip.clone()).expect("expect a successful put");
+            }
         }
 
         {
@@ -431,9 +423,9 @@ mod tests {
             let mut ts: Series<BikeTrip> = Series::open("var/can_write_to_existing_file.json")
                 .expect("expect the time series to open correctly");
 
-            ts.put(trips[0].clone()).expect("expect a successful put");
-            ts.put(trips[1].clone()).expect("expect a successful put");
-            ts.put(trips[2].clone()).expect("expect a successful put");
+            for trip in &trips[0..=2] {
+                ts.put(trip.clone()).expect("expect a successful put");
+            }
         }
 
         {
