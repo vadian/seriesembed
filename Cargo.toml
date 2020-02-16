@@ -22,5 +22,6 @@ dimensioned = { version = "0.7.0", features = ["serde"] }
 serde = "1"
 serde_derive = "1"
 serde_json = "1.0"
+tempfile = "3.1"
 uuid = { version = "0.6.5", features = ["v4", "serde"] }
 yaml-rust = "0.4.0"

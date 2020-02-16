@@ -26,7 +26,6 @@ jobs:
       - run:
           name: test
           command: |
-            mkdir var/
             RUST_BACKTRACE=1 cargo test
 
       - save_cache:
