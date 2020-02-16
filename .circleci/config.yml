@@ -1,52 +1,41 @@
 version: 2
 jobs:
-  build-lfs:
-    working_directory: ~/luminescent-dreams/emseries
-    parallelism: 1
-    shell: /bin/bash --login
-
-    docker:
-    - image: rust:1.33
-
-    steps:
-    - checkout
-
-    - restore_cache:
-        keys:
-          # This branch if available
-          - dep-{{ .Branch }}-
-          # Default branch if not
-          - dep-sol-
-
-    - run: /usr/local/cargo/bin/cargo build
-
-    - save_cache:
-        key: dep-{{ .Branch }}-{{ epoch }}
-        paths:
-        - ~/.cargo
-
-    - run: mkdir var
-    - run: /usr/local/cargo/bin/cargo test
-
-    - save_cache:
-        key: dep-{{ .Branch }}-{{ epoch }}
-        paths:
-        - ~/.cargo
-
-  build-nix:
-    working_directory: ~/luminescent-dreams/emseries
+  build:
+    working_directory: ~/repo
     parallelism: 1
 
     docker:
-    - image: nixos/nix
+      - image: circleci/rust:1.39
 
     steps:
-    - checkout
-    - run: nix-build ./Cargo.nix -A emseries
+      - checkout
+
+      - restore_cache:
+          keys:
+            - dep-{{ checksum "Cargo.toml" }}
+
+      - run:
+          name: build
+          command: cargo build --release
+
+      - save_cache:
+          key: dep-{{ checksum "Cargo.toml" }}
+          paths:
+            - ~/.cargo
+
+      - run:
+          name: test
+          command: |
+            mkdir var/
+            RUST_BACKTRACE=1 cargo test
+
+      - save_cache:
+          key: dep-{{ checksum "Cargo.toml" }}
+          paths:
+            - ~/.cargo
 
 workflows:
   version: 2
   build_all:
     jobs:
-      - build-lfs
-      - build-nix
+      - build

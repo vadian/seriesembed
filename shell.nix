@@ -1,13 +1,12 @@
 let
     pkgs = import <nixpkgs-19.03> {};
-    rust = import ./nixpkgs/rust-1.33.nix {
-      inherit (pkgs.stdenv) mkDerivation;
-      inherit (pkgs) fetchurl stdenv patchelf;
-    };
-in pkgs.stdenv.mkDerivation {
+    ld = import <luminescent-dreams> {};
+in pkgs.mkShell {
     name = "emseries";
 
-    buildInputs = [ pkgs.carnix
-                    rust
-                  ];
+    buildInputs = [ ld.rust_1_39 ];
+
+    RUST_BACKTRACE = "full";
+
+    shellHook = ''if [ -e ~/.nixpkgs/shellhook.sh ]; then . ~/.nixpkgs/shellhook.sh; fi'';
 }
