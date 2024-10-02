@@ -75,6 +75,10 @@ where
         Ok(records)
     }
 
+    //todo: support for opening a directory, with a file per day
+    //todo: update search and get all records functions appropriately
+    //todo: for massive operations, convert to returning a streaming iterator
+
     /// Put a new record into the database. A unique id will be assigned to the record and
     /// returned.
     pub fn put(&mut self, entry: T) -> Result<UniqueId, Error> {
