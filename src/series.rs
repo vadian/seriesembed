@@ -391,7 +391,7 @@ mod tests {
             match ts.filter(predicate) {
                 Err(err) => assert!(false, "{}", err),
                 Ok(mut v) => {
-                    v.sort_by(|a ,b| a.data.duration.partial_cmp(&b.data.duration).unwrap());
+                    v.sort_by(|a, b| a.data.duration.partial_cmp(&b.data.duration).unwrap());
                     assert_eq!(v.len(), 2);
                     assert_eq!(v[0].data, trips[4]);
                     assert_eq!(v[1].data, trips[1]);

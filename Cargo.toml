@@ -1,6 +1,6 @@
 [package]
 name = "seriesembed"
-version = "0.4.0"
+version = "0.6.0"
 authors = ["Carl Middleton <carlmcodes@gmail.com>"]
 description = "an Embedded Time Series database"
 license = "BSD-3-Clause"

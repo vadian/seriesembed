@@ -1,5 +1,5 @@
 # SeriesEmbed
-Forked from EmSeries:
+Forked from [EmSeries](https://github.com/m0n0chr0m3/emseries):
 
 
 Documentation: [seriesembed - Rust](https://docs.rs/seriesembed/0.5.0/seriesembed/)
@@ -20,5 +20,3 @@ It is intended for eventual use in applications that send and receive data multi
 *   Indexing based on time and tags
 *   Support databases larger than memory
 *   Multi-process safety
-
-The actual extent of the features implemened will depend on how I and any others decide to use them.
