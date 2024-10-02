@@ -1,13 +1,13 @@
 # SeriesEmbed
 Forked from EmSeries:
 
-[![CircleCI](https://circleci.com/gh/luminescent-dreams/emseries.svg?style=svg)](https://circleci.com/gh/luminescent-dreams/emseries)
 
-Documentation: [emseries - Rust](https://docs.rs/emseries/0.3.0/emseries/)
+Documentation: [seriesembed - Rust](https://docs.rs/seriesembed/0.5.0/seriesembed/)
 
-EmSeries is an Embedded Time Series database. It is designed for small-scale applications which need to track time series data, but on a scale that does not justify extra database services. I use it for [Fitnesstrax](https://github.com/luminescent-dreams/fitnesstrax), which keeps track of information recorded only a few times a day.
+SeriesEmbed is an Embedded Time Series database. It is designed for small-scale applications which need to track time series data, but on a scale that does not justify extra database services.
 
-I intend to use it eventually for an application that receives data every few seconds from sensors scattered around my house.
+It is intended for eventual use in applications that send and receive data multiple times per second from embedded sensors via SignalK.
+
 
 ## Features
 
