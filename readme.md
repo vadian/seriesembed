@@ -1,4 +1,5 @@
-# EmSeries
+# SeriesEmbed
+Forked from EmSeries:
 
 [![CircleCI](https://circleci.com/gh/luminescent-dreams/emseries.svg?style=svg)](https://circleci.com/gh/luminescent-dreams/emseries)
 

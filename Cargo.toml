@@ -1,12 +1,12 @@
 [package]
-name = "emseries"
+name = "seriesembed"
 version = "0.4.0"
-authors = ["Savanni D'Gerinel <savanni@luminescent-dreams.com>"]
+authors = ["Carl Middleton <carlmcodes@gmail.com>"]
 description = "an Embedded Time Series database"
 license = "BSD-3-Clause"
-documentation = "https://docs.rs/emseries"
-homepage = "https://github.com/luminescent-dreams/emseries"
-repository = "https://github.com/luminescent-dreams/emseries"
+documentation = "https://docs.rs/seriesembed"
+homepage = "https://github.com/vadian/seriesembed"
+repository = "https://github.com/vadian/seriesembed"
 categories = ["database-implementations"]
 edition = "2021"
 
