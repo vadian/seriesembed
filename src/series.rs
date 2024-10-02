@@ -163,6 +163,24 @@ where
         }
     }
 
+    /// Perform a search and sort the resulting records based on the comparison.
+    pub fn filter_sorted<CMP>(
+        &self,
+        predicate: fn(&Record<T>) -> bool,
+        compare: CMP,
+    ) -> Result<Vec<Record<T>>, Error>
+    where
+        CMP: FnMut(&Record<T>, &Record<T>) -> Ordering,
+    {
+        match self.filter(predicate) {
+            Ok(mut records) => {
+                records.sort_by(compare);
+                Ok(records)
+            }
+            Err(err) => Err(err),
+        }
+    }
+
     /// Get an exact record from the database based on unique id.
     pub fn get(&self, uuid: &UniqueId) -> Result<Option<Record<T>>, Error> {
         let val = self.records.get(uuid);
@@ -170,15 +188,14 @@ where
     }
 
     /// Get a subset of records from the database based on a predicate.
-    pub fn filter(&self, predicate: fn(&T) -> bool) -> Result<Vec<Record<T>>, Error> {
-        let mut ret: Vec<Record<T>> = Vec::new();
-
-        for record in self.records.clone().into_values() {
-            if predicate(&record.data) {
-                ret.push(record);
-            }
-        }
-        Ok(ret)
+    pub fn filter(&self, predicate: fn(&Record<T>) -> bool) -> Result<Vec<Record<T>>, Error> {
+        let results: Vec<Record<T>> = self
+            .records
+            .iter()
+            .filter(|&tr| predicate(tr.1))
+            .map(|tr| tr.1.clone())
+            .collect();
+        Ok(results)
     }
 
     /*
@@ -339,6 +356,16 @@ mod tests {
                     assert_eq!(v[0].data, trips[1]);
                 }
             }
+
+            match ts.filter(|d| -> bool {
+                d.data.datetime == DateTimeTz(UTC.with_ymd_and_hms(2011, 10, 31, 0, 0, 0).unwrap())
+            }) {
+                Err(err) => assert!(false, "{}", err),
+                Ok(v) => {
+                    assert_eq!(v.len(), 1);
+                    assert_eq!(v[0].data, trips[1]);
+                }
+            }
         })
     }
 
@@ -370,6 +397,27 @@ mod tests {
                     assert_eq!(v[2].data, trips[3]);
                 }
             }
+
+            match ts.filter_sorted(
+                |c| -> bool {
+                    time_range(
+                        DateTimeTz(UTC.with_ymd_and_hms(2011, 10, 31, 0, 0, 0).unwrap()),
+                        true,
+                        DateTimeTz(UTC.with_ymd_and_hms(2011, 11, 04, 0, 0, 0).unwrap()),
+                        true,
+                    )
+                    .apply(c)
+                },
+                |l, r| l.timestamp().cmp(&r.timestamp()),
+            ) {
+                Err(err) => assert!(false, "{}", err),
+                Ok(v) => {
+                    assert_eq!(v.len(), 3);
+                    assert_eq!(v[0].data, trips[1]);
+                    assert_eq!(v[1].data, trips[2]);
+                    assert_eq!(v[2].data, trips[3]);
+                }
+            }
         })
     }
 
@@ -384,8 +432,8 @@ mod tests {
                 ts.put(trip.clone()).expect("expect a successful put");
             }
 
-            fn predicate(b: &BikeTrip) -> bool {
-                b.duration < Duration(3000.0 * S)
+            fn predicate(b: &Record<BikeTrip>) -> bool {
+                b.data.duration < Duration(3000.0 * S)
             }
 
             match ts.filter(predicate) {
