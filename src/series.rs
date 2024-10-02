@@ -169,6 +169,18 @@ where
         Ok(val.cloned())
     }
 
+    /// Get a subset of records from the database based on a predicate.
+    pub fn filter(&self, predicate: fn(&T) -> bool) -> Result<Vec<Record<T>>, Error> {
+        let mut ret: Vec<Record<T>> = Vec::new();
+
+        for record in self.records.clone().into_values() {
+            if predicate(&record.data) {
+                ret.push(record);
+            }
+        }
+        Ok(ret)
+    }
+
     /*
     pub fn remove(&self, uuid: UniqueId) -> Result<(), Error> {
         unimplemented!()
@@ -192,7 +204,7 @@ mod tests {
     #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
     struct Distance(Meter<f64>);
 
-    #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+    #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, PartialOrd)]
     struct Duration(Second<f64>);
 
     #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -356,6 +368,33 @@ mod tests {
                     assert_eq!(v[0].data, trips[1]);
                     assert_eq!(v[1].data, trips[2]);
                     assert_eq!(v[2].data, trips[3]);
+                }
+            }
+        })
+    }
+
+    #[test]
+    pub fn can_get_entries_by_predicate() {
+        run_test(|path| {
+            let trips = mk_trips();
+            let mut ts: Series<BikeTrip> = Series::open(&path.to_string_lossy())
+                .expect("expect the time series to open correctly");
+
+            for trip in &trips[0..=4] {
+                ts.put(trip.clone()).expect("expect a successful put");
+            }
+
+            fn predicate(b: &BikeTrip) -> bool {
+                b.duration < Duration(3000.0 * S)
+            }
+
+            match ts.filter(predicate) {
+                Err(err) => assert!(false, "{}", err),
+                Ok(mut v) => {
+                    v.sort_by(|a ,b| a.data.duration.partial_cmp(&b.data.duration).unwrap());
+                    assert_eq!(v.len(), 2);
+                    assert_eq!(v[0].data, trips[4]);
+                    assert_eq!(v[1].data, trips[1]);
                 }
             }
         })
